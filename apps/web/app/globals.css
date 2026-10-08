@@ -1,0 +1,149 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * StayOps design tokens.
+ * Warm neutral canvas, white working surfaces, slate text and a single deep-teal
+ * accent. Semantic colours (success/warning/danger/info) are reserved for state.
+ * Spacing follows Tailwind's 4px scale used in 8px steps; radius stays moderate.
+ */
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-sidebar: var(--sidebar);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-info: var(--info);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+
+  --shadow-xs: 0 1px 1px 0 rgb(28 31 36 / 0.04);
+  --shadow-sm: 0 1px 2px 0 rgb(28 31 36 / 0.06), 0 1px 1px -1px rgb(28 31 36 / 0.04);
+  --shadow-popover: 0 8px 24px -6px rgb(28 31 36 / 0.16), 0 2px 6px -2px rgb(28 31 36 / 0.08);
+
+  --animate-fade-up: fade-up 180ms ease-out both;
+  --animate-row-in: row-in 900ms ease-out both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes row-in {
+    from {
+      background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+}
+
+:root {
+  --background: #f6f5f1;
+  --surface: #ffffff;
+  --surface-raised: #fcfbf9;
+  --sidebar: #faf9f6;
+  --foreground: #1b1f24;
+  --muted: #f0eee9;
+  --muted-foreground: #646973;
+  --subtle-foreground: #8b9099;
+  --border: #e7e4dd;
+  --border-strong: #d7d3ca;
+  --input: #dbd7ce;
+  --ring: #0e7068;
+  --primary: #0e6b64;
+  --primary-hover: #0b5a54;
+  --primary-foreground: #ffffff;
+  --accent: #0e7068;
+  --accent-soft: #e5f1ef;
+  --danger: #c0362c;
+  --warning: #b26a00;
+  --success: #1d7a4b;
+  --info: #2a62bf;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-size: 14px;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11" 1, "ss01" 1;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 20%, transparent);
+  }
+  /* Native date/time pickers adopt the theme instead of OS defaults. */
+  input[type="date"],
+  input[type="time"] {
+    color-scheme: light;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 0.45;
+    cursor: pointer;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Section label: compact, quiet, uppercase. */
+@utility eyebrow {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

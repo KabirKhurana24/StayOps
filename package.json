@@ -1,0 +1,24 @@
+{
+  "name": "stayops",
+  "private": true,
+  "description": "Open-source, AI-native property operations platform for short-term rental operators",
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "bootstrap": "node scripts/setup.mjs",
+    "dev:web": "pnpm --filter @stayops/web dev",
+    "dev:api": "node scripts/api.mjs dev",
+    "db:migrate": "node scripts/api.mjs migrate",
+    "db:seed": "node scripts/api.mjs seed",
+    "test": "pnpm test:api && pnpm test:unit && pnpm check:web",
+    "test:api": "node scripts/api.mjs test",
+    "test:e2e": "pnpm --filter @stayops/web test:e2e",
+    "check:api": "node scripts/api.mjs check",
+    "check:web": "pnpm --filter @stayops/shared typecheck && pnpm --filter @stayops/web typecheck && pnpm --filter @stayops/web lint",
+    "check": "pnpm check:api && pnpm check:web",
+    "test:unit": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"packages/shared/src/**/*.test.ts\" \"apps/web/features/**/*.test.ts\""
+  }
+}

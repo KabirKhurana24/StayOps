@@ -1,0 +1,49 @@
+# Optional containerised stack. Local development does not require Docker:
+# Postgres, Auth and Realtime are provided by your Supabase project (.env).
+#
+#   docker compose up --build            # api + web + redis
+#   docker compose --profile tools run --rm migrate
+#
+name: stayops
+
+services:
+  api:
+    build: ./apps/api
+    env_file: .env
+    environment:
+      APP_ENV: production
+      REDIS_URL: redis://redis:6379/0
+      API_CORS_ORIGINS: http://localhost:3000
+    ports: ["8000:8000"]
+    depends_on: [redis]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/web.Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-${SUPABASE_URL}}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY}}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+  # Architecturally supported (queues, rate limits, caching); unused in Phase 1.
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: [redis-data:/data]
+
+  migrate:
+    profiles: [tools]
+    build: ./apps/api
+    env_file: .env
+    command: ["uv", "run", "--no-dev", "alembic", "upgrade", "head"]
+
+volumes:
+  redis-data:
