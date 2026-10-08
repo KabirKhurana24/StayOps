@@ -5,10 +5,23 @@ DB-backed tests run real Alembic migrations into a *disposable schema* (never
 a transaction that is rolled back afterwards. Auth uses HS256 tokens signed with
 a test-only secret, exercising the same verification code path as production.
 If no database is reachable, DB tests are skipped with an explicit reason.
+
+Tiers (markers, applied automatically — see docs/testing.md):
+
+* ``unit``     — no database at all.
+* ``db``       — real PostgreSQL (constraints, EXCLUDE, SKIP LOCKED, RLS flags).
+                 Runs against the local test cluster in the fast cycle.
+* ``supabase`` — needs Supabase itself (Realtime ``realtime.send`` /
+                 ``realtime.messages``). Marked explicitly; runs against the real
+                 project. With ``STAYOPS_REQUIRE_SUPABASE=1`` a missing Supabase
+                 feature fails the test instead of skipping it, so the Supabase
+                 tier can never pass vacuously.
 """
 
 from __future__ import annotations
 
+import json
+import os
 import time
 import uuid
 from collections.abc import Iterator
@@ -32,6 +45,25 @@ from app.organizations.models import Organization, OrganizationMember, Profile, 
 
 TEST_JWT_SECRET = "test-only-secret-not-used-anywhere-else-0123456789"
 TEST_SUPABASE_URL = "https://stayops-test.supabase.co"
+REQUIRE_SUPABASE = os.environ.get("STAYOPS_REQUIRE_SUPABASE", "").lower() in ("1", "true", "yes")
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Tag every test with its tier so ``-m unit|db|supabase`` selects precisely."""
+    for item in items:
+        if item.get_closest_marker("supabase"):
+            continue
+        uses_db = "db_engine" in getattr(item, "fixturenames", ())
+        item.add_marker(pytest.mark.db if uses_db else pytest.mark.unit)
+
+
+def require_supabase_feature(available: bool, reason: str) -> None:
+    """Skip (fast tier) or fail (Supabase tier) when a Supabase feature is absent."""
+    if available:
+        return
+    if REQUIRE_SUPABASE:
+        pytest.fail(f"{reason} (STAYOPS_REQUIRE_SUPABASE=1: this tier must run on Supabase)")
+    pytest.skip(reason)
 
 
 @pytest.fixture(scope="session")
@@ -315,3 +347,35 @@ def reservation_body(stay: Stay, **overrides: Any) -> dict[str, Any]:
     }
     body.update(overrides)
     return body
+
+
+# ------------------------------------------------------------------ realtime
+
+
+def install_realtime_triggers(db: Session, tables: tuple[str, ...]) -> None:
+    """Attach the production broadcast trigger (migration 0002) to ``tables`` in this
+    test's disposable schema. Runs inside the test transaction, which is rolled back,
+    so nothing is ever actually broadcast. Requires Supabase Realtime."""
+    available = db.execute(
+        text(
+            "SELECT to_regprocedure('stayops_private.broadcast_change()') IS NOT NULL "
+            "AND to_regclass('realtime.messages') IS NOT NULL"
+        )
+    ).scalar()
+    require_supabase_feature(bool(available), "Supabase Realtime is not installed on this database")
+    for table in tables:
+        db.execute(
+            text(
+                f"CREATE TRIGGER stayops_realtime_broadcast AFTER INSERT OR UPDATE OR DELETE "
+                f"ON {table} FOR EACH ROW EXECUTE FUNCTION stayops_private.broadcast_change()"
+            )
+        )
+
+
+def realtime_notices(db: Session, topic: str) -> list[tuple[str, dict[str, Any]]]:
+    """Broadcast notices queued on ``topic`` in this transaction: (event, payload)."""
+    rows = db.execute(
+        text("SELECT event, payload FROM realtime.messages WHERE topic = :topic AND private"),
+        {"topic": topic},
+    ).all()
+    return [(e, p if isinstance(p, dict) else json.loads(p)) for e, p in rows]

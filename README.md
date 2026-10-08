@@ -108,7 +108,7 @@ Create a project at [supabase.com](https://supabase.com), then fill `.env` in th
 | `SUPABASE_SECRET_KEY` | API Keys (secret, or legacy `service_role`) — **server only** | seed script only |
 | `SUPABASE_JWT_SECRET` | JWT Keys → legacy secret (optional) | API, only for HS256 tokens |
 | `DATABASE_URL` | Connect → **Session pooler** string, prefixed `postgresql+psycopg://` | API, migrations, tests |
-| `TEST_DATABASE_URL` | optional; defaults to `DATABASE_URL` | tests (disposable schema) |
+| `TEST_DATABASE_URL` | optional; defaults to `DATABASE_URL`. Used by the Supabase test tier; the fast tier uses the local cluster | tests (disposable schema) |
 | `API_CORS_ORIGINS` | `http://localhost:3000` | API |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | web |
 | `SEED_DEMO_EMAIL` / `SEED_DEMO_PASSWORD` | choose a dev password | seed + Playwright |
@@ -147,16 +147,21 @@ within a second, with no refresh.
 ## Tests and checks
 
 ```bash
-pnpm test:api           # pytest — 84 tests: lifecycle, availability, tenancy, events, audit, realtime, time/DST, integrity …
+pnpm test:api:fast      # pytest unit + DB integration on a local PostgreSQL 17 (~30 s) — the normal dev cycle
+pnpm test:api:supabase  # pytest tests that need Supabase itself (Realtime publication) — real project
+pnpm test:api           # complete backend suite: fast tier, then Supabase tier
 pnpm test:unit          # node --test — calendar geometry + timezone helpers (no deps)
 pnpm check:api          # ruff lint + format check + mypy --strict
 pnpm check:web          # tsc (shared + web) + eslint --max-warnings 0
 pnpm test:e2e           # Playwright: lifecycle, filters, availability conflict, calendar, mobile; two-browser realtime
+pnpm test:fast          # test:api:fast + test:unit + check:web
 pnpm test               # test:api + test:unit + check:web
 ```
 
-Backend tests run real Alembic migrations into a **disposable schema** on your database
-(never `public`), wrap each test in a rolled-back transaction, then drop the schema.
+Backend tests run real Alembic migrations into a **disposable schema** (never `public`),
+wrap each test in a rolled-back transaction, then drop the schema. The suite is tiered
+by what each test needs — see [docs/testing.md](docs/testing.md) for the local test
+cluster (`pnpm test:db:start`) and why the remote-only suite took ~2.5 h.
 Playwright needs the API, web app and seed data; it starts the servers itself if they
 are not running (`reuseExistingServer`).
 

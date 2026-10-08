@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.audit.models import AuditLog
 from app.events.models import Event, EventStatus
-from tests.conftest import Member, Stay, reservation_body
+from tests.conftest import Member, Stay, install_realtime_triggers, reservation_body
 
 
 def _create(client: TestClient, member: Member, stay: Stay, **overrides: Any) -> dict[str, Any]:
@@ -182,6 +182,7 @@ def test_viewer_cannot_run_actions_and_other_orgs_cannot_see_them(
     assert _event_types(db, res["id"]) == ["reservation.created"]
 
 
+@pytest.mark.supabase
 def test_realtime_publication_path(
     client: TestClient, db: Session, owner_a: Member, stay_a: Stay
 ) -> None:
@@ -192,21 +193,7 @@ def test_realtime_publication_path(
     test's disposable schema inside the test transaction (rolled back afterwards,
     so nothing is ever broadcast).
     """
-    available = db.execute(
-        text(
-            "SELECT to_regprocedure('stayops_private.broadcast_change()') IS NOT NULL "
-            "AND to_regclass('realtime.messages') IS NOT NULL"
-        )
-    ).scalar()
-    if not available:
-        pytest.skip("Supabase Realtime is not installed on this database")
-
-    db.execute(
-        text(
-            "CREATE TRIGGER stayops_realtime_broadcast AFTER INSERT OR UPDATE OR DELETE "
-            "ON reservations FOR EACH ROW EXECUTE FUNCTION stayops_private.broadcast_change()"
-        )
-    )
+    install_realtime_triggers(db, ("reservations",))
     res = _create(client, owner_a, stay_a)
     _act(client, owner_a, res["id"], "check-in")
 

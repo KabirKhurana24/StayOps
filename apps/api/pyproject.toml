@@ -52,4 +52,11 @@ disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --strict-markers"
+markers = [
+    "unit: no database (applied automatically)",
+    "db: needs real PostgreSQL; runs on the local test cluster in the fast cycle (automatic)",
+    "supabase: needs Supabase itself (Realtime); runs against the real project",
+    "eval: AI evaluation cases (MockProvider, deterministic)",
+    "llm_live: calls a real, paid LLM provider; opt-in only (STAYOPS_LIVE_LLM=1)",
+]
