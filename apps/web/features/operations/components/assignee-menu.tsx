@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@stayops/shared";
 import { Check, UserMinus, UserPlus } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -21,6 +22,7 @@ export function AssigneeMenu({
   workload = "tasks",
   trigger,
   label = "Assign",
+  roles,
 }: {
   value: string | null;
   onChange: (assigneeId: string | null) => void;
@@ -29,8 +31,11 @@ export function AssigneeMenu({
   workload?: "tasks" | "work_orders";
   trigger?: ReactNode;
   label?: string;
+  /** Only offer members with these roles (e.g. the inbox is front-of-house only). */
+  roles?: readonly Role[];
 }) {
   const staff = useStaff();
+  const members = roles ? staff.data?.filter((m) => roles.includes(m.role)) : staff.data;
   return (
     <Menu>
       <MenuTrigger asChild disabled={disabled || pending}>
@@ -43,7 +48,7 @@ export function AssigneeMenu({
       <MenuContent align="start" className="w-64" aria-label="Choose assignee">
         <MenuLabel>Team</MenuLabel>
         {staff.isPending ? <div className="px-2 py-1.5 text-xs text-muted-foreground">Loading team…</div> : null}
-        {staff.data?.map((m) => {
+        {members?.map((m) => {
           const load = workload === "tasks" ? m.active_tasks : m.active_work_orders;
           return (
             <MenuItem key={m.user_id} onSelect={() => onChange(m.user_id)} data-testid="assignee-option" className="h-auto py-1.5">

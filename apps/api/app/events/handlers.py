@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session
 from app.core.logging import get_logger
 from app.events.dispatcher import registry
 from app.events.types import EventEnvelope
+from app.guest_requests import handlers as _guest_requests  # noqa: F401  (registers subscribers)
+from app.inbox import handlers as _inbox  # noqa: F401  (registers subscribers)
 from app.operations import handlers as _operations  # noqa: F401  (registers subscribers)
 
 logger = get_logger("stayops.events.handlers")

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.context import TenantContext
 from app.core.time import ensure_aware_utc
-from app.guests.schemas import GuestStats, GuestStayRef
+from app.guests.schemas import GuestPropertyStays, GuestStats, GuestStayRef
 from app.properties.models import Property, Unit
 from app.reservations.models import BLOCKING_STATUSES, Reservation, ReservationStatus
 
@@ -45,6 +45,30 @@ def guest_stats(
         s.total_stays = total
         s.completed_stays = completed
         s.last_stay_at = last_stay
+
+    # Property history: where each guest has stayed (non-cancelled).
+    for gid, pid, pname, stays, last_out in session.execute(
+        select(
+            Reservation.guest_id,
+            Property.id,
+            Property.name,
+            func.count(),
+            func.max(Reservation.check_out).filter(Reservation.status == S.CHECKED_OUT),
+        )
+        .join(Property, Property.id == Reservation.property_id)
+        .where(
+            Reservation.organization_id == ctx.organization_id,
+            Reservation.guest_id.in_(ids),
+            Reservation.status != S.CANCELLED,
+        )
+        .group_by(Reservation.guest_id, Property.id, Property.name)
+        .order_by(Reservation.guest_id, func.count().desc(), Property.name)
+    ):
+        stats[gid].properties.append(
+            GuestPropertyStays(
+                property_id=pid, property_name=pname, stays=stays, last_check_out=last_out
+            )
+        )
 
     # Current or next stay per guest (DISTINCT ON keeps the earliest active one).
     for row in session.execute(

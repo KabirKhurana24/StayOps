@@ -31,6 +31,16 @@
 6. **Realtime**: private topics + membership RLS, receive-only, no PII. See
    [realtime.md](realtime.md).
 
+## Guest portal access
+
+Guests have no account. A per-stay link token (256-bit, stored only as SHA-256,
+revocable, expiring 7 days after check-out) is sent as `X-Guest-Token` and resolved
+server-side to one organization + guest + reservation. Guest contexts carry the
+`VIEWER` role and a stay scope; guest DTOs exclude internal notes, amounts, staff
+identities and other guests. Member JWTs are not accepted on `/guest/*` and guest
+tokens are not accepted anywhere else. The token travels in the URL fragment so it
+never reaches server logs or `Referer`. See [guest-experience.md](guest-experience.md).
+
 ## Input validation and errors
 
 - Pydantic validates every body/query (lengths, ranges, ISO currency, IANA timezone,

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BedDouble, History, Mail, MessageSquare, Phone, StickyNote, Heart, UserRound } from "lucide-react";
+import { ArrowLeft, BedDouble, History, Mail, Phone, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { useBreadcrumb } from "@/components/shell/shell-context";
@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, Metric, MetricStrip } from "@/components/ui/misc";
 import { DescriptionItem, DescriptionList, Panel } from "@/components/ui/panel";
 import { Tabs } from "@/components/ui/segmented";
-import { ComingSoon, EmptyState, ErrorState, Skeleton, SkeletonRows } from "@/components/ui/states";
+import { EmptyState, ErrorState, Skeleton, SkeletonRows } from "@/components/ui/states";
 import { useAudit } from "@/features/activity/api";
 import { ActivityTimeline } from "@/features/activity/components/activity-timeline";
 import { useGuest } from "@/features/guests/api";
+import { GuestConversations, GuestNotes, GuestPreferencesForm, GuestRequestsTab } from "@/features/guests/components/guest-tabs";
 import { can, useCurrentOrganization } from "@/features/organizations/api";
 import { useReservations } from "@/features/reservations/api";
 import { ReservationDrawer } from "@/features/reservations/components/reservation-drawer";
@@ -20,7 +21,7 @@ import { ApiError } from "@/lib/api/client";
 import { formatRelative, formatStayRange, guestName } from "@/lib/format";
 import { useSearchState } from "@/lib/use-search-state";
 
-type Tab = "reservations" | "activity" | "conversations" | "notes" | "preferences";
+type Tab = "reservations" | "activity" | "conversations" | "requests" | "notes" | "preferences";
 
 export function GuestDetail({ id }: { id: string }) {
   const guest = useGuest(id);
@@ -102,9 +103,10 @@ export function GuestDetail({ id }: { id: string }) {
             tabs={[
               { value: "reservations", label: "Reservations", count: reservations.data?.total },
               { value: "activity", label: "Activity" },
-              { value: "conversations", label: "Conversations", badge: "Soon" },
-              { value: "notes", label: "Notes", badge: "Soon" },
-              { value: "preferences", label: "Preferences", badge: "Soon" },
+              { value: "conversations", label: "Conversations" },
+              { value: "requests", label: "Requests" },
+              { value: "notes", label: "Notes" },
+              { value: "preferences", label: "Preferences" },
             ]}
           />
           <div className="overflow-hidden rounded-lg border bg-surface shadow-xs">
@@ -129,11 +131,21 @@ export function GuestDetail({ id }: { id: string }) {
                 <ActivityTimeline entries={audit.data.items} />
               )
             ) : tab === "conversations" ? (
-              <ComingSoon icon={MessageSquare} title="Conversations" description="Messages across Airbnb, Booking.com, email and SMS will appear here with the Unified Inbox." />
+              can(org.data, "inbox:read") ? (
+                <GuestConversations guestId={id} />
+              ) : (
+                <EmptyState compact icon={UserRound} title="Guest conversations are visible to the front-of-house team" />
+              )
+            ) : tab === "requests" ? (
+              can(org.data, "inbox:read") ? (
+                <GuestRequestsTab guestId={id} />
+              ) : (
+                <EmptyState compact icon={UserRound} title="Guest requests are visible to the front-of-house team" />
+              )
             ) : tab === "notes" ? (
-              <ComingSoon icon={StickyNote} title="Guest notes" description="Private team notes about this guest are planned for the CRM module." />
+              <GuestNotes key={g.version} guest={g} canWrite={can(org.data, "guests:write")} />
             ) : (
-              <ComingSoon icon={Heart} title="Preferences" description="Stay preferences (early check-in, bedding, accessibility) will be captured here." />
+              <GuestPreferencesForm key={g.version} guest={g} canWrite={can(org.data, "guests:write")} />
             )}
           </div>
         </div>
@@ -143,6 +155,20 @@ export function GuestDetail({ id }: { id: string }) {
             <DescriptionItem label="Email">{g.email ?? <span className="text-subtle-foreground">Not provided</span>}</DescriptionItem>
             <DescriptionItem label="Phone">{g.phone ?? <span className="text-subtle-foreground">Not provided</span>}</DescriptionItem>
             <DescriptionItem label="Added">{formatRelative(g.created_at, now)}</DescriptionItem>
+            {s?.properties.length ? (
+              <DescriptionItem label="Stayed at">
+                <ul className="space-y-0.5">
+                  {s.properties.map((p) => (
+                    <li key={p.property_id}>
+                      <Link href={`/properties/${p.property_id}`} className="hover:underline">
+                        {p.property_name}
+                      </Link>{" "}
+                      <span className="text-subtle-foreground">· {p.stays}</span>
+                    </li>
+                  ))}
+                </ul>
+              </DescriptionItem>
+            ) : null}
           </DescriptionList>
         </Panel>
       </div>

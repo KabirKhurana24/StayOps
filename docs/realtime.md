@@ -31,6 +31,11 @@ Implemented in:
 | `properties` | insert, update, delete | properties, command center |
 | `units` | insert, update, delete | units, properties, command center |
 | `guests` | insert, update, delete | guests, reservations |
+| `tasks`, `cleanings`, `maintenance_work_orders` | insert, update, delete | operations boards, unit state, command center, inbox context |
+| `conversations` | insert, update, delete | inbox lists/counts, command center |
+| `messages` | insert, update, delete | inbox, the open thread (`conversation_id`), command center |
+| `guest_requests` | insert, update, delete | requests, inbox, command center |
+| `property_knowledge` | insert, update, delete | property guides |
 | `events` | insert | event stream |
 | `audit_logs` | insert | audit timelines, command center (recent activity) |
 
@@ -45,7 +50,13 @@ Minimal, no PII:
   "status": "CHECKED_IN", "at": "2026-10-05T13:02:11Z" }
 ```
 
-Audit/event notices add `action` / `event_type`, `entity_id` / `aggregate_id`.
+Audit/event notices add `action` / `event_type`, `entity_id` / `aggregate_id`;
+inbox notices add `conversation_id` (migration 0005). Message content never rides
+on a notice.
+
+The guest portal does **not** use Supabase Realtime: guests have no Supabase
+session and must never join an organization topic. It polls its stay-scoped
+endpoints instead (see [guest-experience.md](guest-experience.md)).
 
 ## Authorization decisions
 

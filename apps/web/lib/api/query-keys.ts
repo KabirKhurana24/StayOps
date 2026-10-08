@@ -53,6 +53,24 @@ export const queryKeys = {
     counts: (filters: Record<string, unknown>) => ["maintenance", "counts", filters] as const,
     detail: (id: string) => ["maintenance", "detail", id] as const,
   },
+  inbox: {
+    all: ["inbox"] as const,
+    list: (filters: Record<string, unknown>) => ["inbox", "list", filters] as const,
+    counts: (filters: Record<string, unknown>) => ["inbox", "counts", filters] as const,
+    detail: (id: string) => ["inbox", "detail", id] as const,
+    context: (id: string) => ["inbox", "context", id] as const,
+    messages: (id: string) => ["inbox", "messages", id] as const,
+    channels: ["inbox", "channels"] as const,
+  },
+  guestRequests: {
+    all: ["guest-requests"] as const,
+    list: (filters: Record<string, unknown>) => ["guest-requests", "list", filters] as const,
+  },
+  knowledge: {
+    all: ["knowledge"] as const,
+    list: (propertyId: string) => ["knowledge", propertyId] as const,
+  },
+  portalLink: (reservationId: string) => ["portal-link", reservationId] as const,
   operations: {
     all: ["operations"] as const,
     staff: ["operations", "staff"] as const,

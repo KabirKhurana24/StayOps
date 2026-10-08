@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Avatar } from "@/components/ui/misc";
+import { MessageGuestButton } from "@/features/inbox/components/message-guest-button";
 import { useRecentlyChanged } from "@/features/realtime/realtime-provider";
 import { ReservationTasks } from "@/features/tasks/components/reservation-tasks";
 import { formatInZone, formatMoney, guestName, plural } from "@/lib/format";
@@ -124,6 +125,7 @@ export function ReservationDetailView({ r, canWrite, variant = "drawer" }: { r: 
                 <Pencil /> Edit
               </Button>
             ) : null}
+            {r.status !== "CANCELLED" ? <MessageGuestButton reservationId={r.id} /> : null}
             <MoreActions r={r} canWrite={canWrite} onEdit={() => setEditing(true)} fullPageLink={variant === "drawer"} />
           </div>
         ) : null}

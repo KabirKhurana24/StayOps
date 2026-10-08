@@ -142,6 +142,21 @@ const ACTION_VERB: Record<string, string> = {
   "maintenance.blocked": "put work order on hold",
   "maintenance.resolved": "resolved work order",
   "maintenance.closed": "closed work order",
+  "guest.updated": "updated guest",
+  "conversation.created": "started conversation",
+  "conversation.updated": "updated conversation",
+  "conversation.assigned": "assigned conversation",
+  "message.created": "sent message",
+  "message.read": "read messages",
+  "guest_request.created": "raised guest request",
+  "guest_request.updated": "updated guest request",
+  "guest_request.resolved": "resolved guest request",
+  "guest_request.closed": "closed guest request",
+  "knowledge.created": "added guide entry",
+  "knowledge.updated": "updated guide entry",
+  "knowledge.archived": "archived guide entry",
+  "guest_portal.link_created": "shared guest portal link",
+  "guest_portal.link_revoked": "revoked guest portal link",
 };
 
 export function humanizeAction(action: string): string {
@@ -153,7 +168,8 @@ export const ACTIVITY_CATEGORIES = {
   all: { label: "All", entityTypes: undefined },
   reservations: { label: "Reservations", entityTypes: ["reservation"] },
   guests: { label: "Guests", entityTypes: ["guest"] },
-  properties: { label: "Properties", entityTypes: ["property", "unit"] },
+  inbox: { label: "Inbox", entityTypes: ["conversation", "message", "guest_request", "guest_portal_link"] },
+  properties: { label: "Properties", entityTypes: ["property", "unit", "knowledge"] },
   operations: { label: "Operations", entityTypes: ["task", "cleaning", "maintenance"] },
   system: { label: "System", entityTypes: ["organization"] },
 } as const satisfies Record<string, { label: string; entityTypes: readonly string[] | undefined }>;

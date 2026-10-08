@@ -125,3 +125,59 @@ def test_seed_operations_picture(db: Session) -> None:
         "blocked_unit",
         "unassigned_urgent_task",
     }
+
+
+def test_seed_guest_experience_picture(db: Session) -> None:
+    """Guides, conversations and requests on live stays, all through domain services."""
+    from app.guest_requests.models import GuestRequest, GuestRequestStatus, GuestRequestType
+    from app.inbox import service as inbox
+    from app.inbox.models import Conversation, ConversationStatus
+    from app.knowledge.models import KnowledgeVisibility, PropertyKnowledge
+    from app.seed.operations import staff_id
+    from app.tasks.models import Task
+
+    now = datetime(2026, 10, 5, 9, 0, tzinfo=UTC)
+    counts = seed_demo(db, uuid.uuid4(), "demo@stayops.test", now)
+    org = _org(db)
+    assert counts["conversations"] == 6 and counts["guest_requests"] == 4
+    assert counts["work_orders"] == 6  # guest requests didn't add work orders
+
+    visibility = dict(
+        db.execute(
+            select(PropertyKnowledge.visibility, func.count())
+            .where(PropertyKnowledge.organization_id == org.id)
+            .group_by(PropertyKnowledge.visibility)
+        ).all()
+    )
+    assert visibility[KnowledgeVisibility.STAY] >= 6  # Wi-Fi + door codes per property
+    assert visibility[KnowledgeVisibility.INTERNAL] >= 1
+    assert sum(visibility.values()) == counts["knowledge_entries"]
+
+    reqs = {
+        r.type: r
+        for r in db.scalars(select(GuestRequest).where(GuestRequest.organization_id == org.id))
+    }
+    assert reqs[GuestRequestType.LATE_CHECKOUT].status == GuestRequestStatus.OPEN
+    assert reqs[GuestRequestType.LATE_CHECKOUT].requested_for is not None
+    assert reqs[GuestRequestType.EARLY_CHECK_IN].status == GuestRequestStatus.ACKNOWLEDGED
+    assert reqs[GuestRequestType.MAINTENANCE].status == GuestRequestStatus.OPEN
+    towels = reqs[GuestRequestType.EXTRA_TOWELS]
+    assert towels.status == GuestRequestStatus.IN_PROGRESS and towels.task_id is not None
+    assert db.get_one(Task, towels.task_id).assigned_to == staff_id("maria")
+
+    ctx = TenantContext(organization_id=org.id, role=Role.OWNER, actor=Actor.system())
+    from app.core.pagination import PageParams
+
+    views, total = inbox.list_conversations(
+        db, ctx, PageParams(limit=50, offset=0), inbox.InboxFilters()
+    )
+    assert total == 6
+    unread = {v.guest.first_name for v in views if v.unread_count}
+    assert unread == {"Sarah", "Chloe"}
+    statuses = {v.guest.first_name: v.conversation.status for v in views}
+    assert statuses["Isabella"] == ConversationStatus.RESOLVED
+    assert statuses["Noah"] == ConversationStatus.CLOSED
+    # Threads are chronological: seq order matches created_at order everywhere.
+    for conv in db.scalars(select(Conversation).where(Conversation.organization_id == org.id)):
+        msgs = inbox.list_messages(db, ctx, conv.id)
+        assert [m.created_at for m in msgs] == sorted(m.created_at for m in msgs), conv.id

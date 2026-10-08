@@ -6,11 +6,19 @@ import { env, isSupabaseConfigured } from "@/lib/env";
 const PUBLIC_PATHS = ["/login", "/signup", "/auth"];
 
 /**
+ * The guest portal authenticates with its own per-stay link token (checked by the
+ * API on every call), not a Supabase session. Exact segment match: "/guests" (the
+ * operator CRM) must stay behind sign-in.
+ */
+const isGuestPortal = (pathname: string) => pathname === "/guest" || pathname.startsWith("/guest/");
+
+/**
  * Refreshes the Supabase session cookie on every navigation and gates the app:
  * unauthenticated users are sent to /login. This is a UX gate only — the API
  * independently verifies the JWT and tenant membership on every request.
  */
 export async function proxy(request: NextRequest) {
+  if (isGuestPortal(request.nextUrl.pathname)) return NextResponse.next();
   const isPublic = PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
   if (!isSupabaseConfigured) {
     return isPublic ? NextResponse.next() : redirectTo(request, "/login");

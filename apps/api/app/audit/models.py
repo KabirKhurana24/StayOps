@@ -17,6 +17,7 @@ class ActorType(StrEnum):
     SYSTEM = "SYSTEM"
     INTEGRATION = "INTEGRATION"
     AI_AGENT = "AI_AGENT"
+    GUEST = "GUEST"  # a guest acting through their portal link (own stay only)
 
 
 class AuditLog(UUIDPrimaryKeyMixin, TenantMixin, Base):

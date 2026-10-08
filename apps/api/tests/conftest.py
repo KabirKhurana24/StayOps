@@ -43,6 +43,9 @@ from app.db.session import build_engine, get_db
 from app.main import create_app
 from app.organizations.models import Organization, OrganizationMember, Profile, Role
 
+# Phase 4 fixtures (guest_stay, …) live with their builders.
+pytest_plugins = ["tests.inbox_helpers"]
+
 TEST_JWT_SECRET = "test-only-secret-not-used-anywhere-else-0123456789"
 TEST_SUPABASE_URL = "https://stayops-test.supabase.co"
 REQUIRE_SUPABASE = os.environ.get("STAYOPS_REQUIRE_SUPABASE", "").lower() in ("1", "true", "yes")

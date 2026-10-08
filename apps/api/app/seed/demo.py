@@ -22,8 +22,10 @@ from sqlalchemy.orm import Session
 from app.auth.context import Actor, CurrentUser, TenantContext
 from app.core.time import local_to_utc
 from app.events.dispatcher import commit_and_dispatch
+from app.guest_requests.models import GuestRequest
 from app.guests.schemas import GuestCreate
 from app.guests.service import create_guest
+from app.inbox.models import Conversation
 from app.maintenance.models import WorkOrder
 from app.organizations.models import Organization, OrganizationMember, Profile, Role
 from app.organizations.schemas import OrganizationCreate
@@ -34,6 +36,7 @@ from app.properties.service import create_property, create_unit
 from app.reservations.models import Reservation, ReservationSource, ReservationStatus
 from app.reservations.schemas import ReservationCreate, ReservationUpdate
 from app.reservations.service import create_reservation, update_reservation
+from app.seed.guest_experience import seed_guest_experience
 from app.seed.operations import seed_operations
 from app.tasks.models import Task
 
@@ -423,8 +426,11 @@ def _wipe_demo_org(session: Session) -> None:
     org_id = session.scalar(select(Organization.id).where(Organization.slug == DEMO_ORG_SLUG))
     if org_id is None:
         return
-    # NO ACTION FKs first: work orders → tasks (cleanings cascade) → reservations
-    # (→ units/guests), then the organization cascades the rest.
+    # NO ACTION FKs first: guest requests → conversations (messages cascade) → work
+    # orders → tasks (cleanings cascade) → reservations (→ units/guests), then the
+    # organization cascades the rest.
+    session.execute(delete(GuestRequest).where(GuestRequest.organization_id == org_id))
+    session.execute(delete(Conversation).where(Conversation.organization_id == org_id))
     session.execute(delete(WorkOrder).where(WorkOrder.organization_id == org_id))
     session.execute(delete(Task).where(Task.organization_id == org_id))
     session.execute(delete(Reservation).where(Reservation.organization_id == org_id))
@@ -529,6 +535,9 @@ def seed_demo(
     # Operations: the team's day — cleanings, inspections, tasks, work orders.
     operations = seed_operations(session, ctx, now)
 
+    # Guest experience: house guides, conversations and requests on live stays.
+    guest_experience = seed_guest_experience(session, ctx, now)
+
     # Operational wrinkle: a unit goes into maintenance after it was booked.
     session.execute(
         update(Unit)
@@ -552,4 +561,5 @@ def seed_demo(
         "reservations": len(STAYS),
         "members": member_count,
         **operations,
+        **guest_experience,
     }

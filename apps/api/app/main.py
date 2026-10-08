@@ -20,8 +20,13 @@ from app.core.logging import configure_logging, get_logger
 from app.core.request_context import RequestContextMiddleware
 from app.events import handlers as _event_handlers  # noqa: F401  (registers subscribers)
 from app.events.router import router as events_router
+from app.guest_portal.router import guest_router as guest_portal_router
+from app.guest_portal.router import links_router as portal_links_router
+from app.guest_requests.router import router as guest_requests_router
 from app.guests.router import router as guests_router
 from app.health.router import router as health_router
+from app.inbox.router import router as inbox_router
+from app.knowledge.router import router as knowledge_router
 from app.maintenance.router import router as maintenance_router
 from app.operations.router import router as operations_router
 from app.organizations.router import router as organizations_router
@@ -101,6 +106,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "Idempotency-Key",
             "X-Organization-Id",
             "X-Request-Id",
+            "X-Guest-Token",
         ],
         expose_headers=["X-Request-Id"],
         max_age=600,
@@ -124,6 +130,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         command_center_router,
         events_router,
         audit_router,
+        inbox_router,
+        guest_requests_router,
+        knowledge_router,
+        portal_links_router,
+        guest_portal_router,
     ):
         v1.include_router(router)
     app.include_router(v1)

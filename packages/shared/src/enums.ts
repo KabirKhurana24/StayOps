@@ -48,6 +48,7 @@ export const EVENT_TYPES = [
   "unit.blocked",
   "unit.unblocked",
   "guest.created",
+  "guest.updated",
   "reservation.created",
   "reservation.updated",
   "reservation.cancelled",
@@ -75,6 +76,20 @@ export const EVENT_TYPES = [
   "maintenance.blocked",
   "maintenance.resolved",
   "maintenance.closed",
+  "conversation.created",
+  "conversation.updated",
+  "conversation.assigned",
+  "message.created",
+  "message.read",
+  "guest_request.created",
+  "guest_request.updated",
+  "guest_request.resolved",
+  "guest_request.closed",
+  "knowledge.created",
+  "knowledge.updated",
+  "knowledge.archived",
+  "guest_portal.link_created",
+  "guest_portal.link_revoked",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
@@ -95,6 +110,10 @@ export const PERMISSIONS = [
   "maintenance:read",
   "maintenance:manage",
   "maintenance:work",
+  "inbox:read",
+  "inbox:write",
+  "guest_requests:manage",
+  "knowledge:write",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -170,3 +189,64 @@ export type MaintenanceView = (typeof MAINTENANCE_VIEWS)[number];
 
 export const UNIT_OPERATIONAL_STATUSES = ["READY", "OCCUPIED", "CLEANING", "MAINTENANCE", "OUT_OF_SERVICE"] as const;
 export type UnitOperationalStatus = (typeof UNIT_OPERATIONAL_STATUSES)[number];
+
+// ------------------------------------------------------------- guest experience (Phase 4)
+
+export const ACTOR_TYPES = ["USER", "SYSTEM", "INTEGRATION", "AI_AGENT", "GUEST"] as const;
+export type ActorType = (typeof ACTOR_TYPES)[number];
+
+export const CHANNELS = ["IN_APP", "EMAIL", "SMS", "WHATSAPP", "AIRBNB", "BOOKING", "OTHER"] as const;
+export type Channel = (typeof CHANNELS)[number];
+
+export const CONVERSATION_STATUSES = ["OPEN", "PENDING", "RESOLVED", "CLOSED"] as const;
+export type ConversationStatus = (typeof CONVERSATION_STATUSES)[number];
+
+export const CONVERSATION_PRIORITIES = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
+export type ConversationPriority = (typeof CONVERSATION_PRIORITIES)[number];
+
+export const INBOX_VIEWS = ["all", "unread", "open", "mine", "high", "resolved"] as const;
+export type InboxView = (typeof INBOX_VIEWS)[number];
+
+export const SENDER_TYPES = ["GUEST", "STAFF", "SYSTEM", "AI"] as const;
+export type SenderType = (typeof SENDER_TYPES)[number];
+
+export const MESSAGE_TYPES = ["TEXT", "SYSTEM", "REQUEST", "STATUS"] as const;
+export type MessageType = (typeof MESSAGE_TYPES)[number];
+
+export const GUEST_REQUEST_TYPES = [
+  "EARLY_CHECK_IN",
+  "LATE_CHECKOUT",
+  "EXTRA_TOWELS",
+  "HOUSEKEEPING",
+  "MAINTENANCE",
+  "QUESTION",
+  "OTHER",
+] as const;
+export type GuestRequestType = (typeof GUEST_REQUEST_TYPES)[number];
+
+export const GUEST_REQUEST_STATUSES = ["OPEN", "ACKNOWLEDGED", "IN_PROGRESS", "RESOLVED", "CLOSED", "CANCELLED"] as const;
+export type GuestRequestStatus = (typeof GUEST_REQUEST_STATUSES)[number];
+
+export const GUEST_REQUEST_SOURCES = ["GUEST", "STAFF", "AI", "SYSTEM"] as const;
+export type GuestRequestSource = (typeof GUEST_REQUEST_SOURCES)[number];
+
+export const KNOWLEDGE_CATEGORIES = [
+  "WIFI",
+  "CHECK_IN",
+  "CHECK_OUT",
+  "HOUSE_RULES",
+  "PARKING",
+  "DIRECTIONS",
+  "AMENITIES",
+  "APPLIANCES",
+  "EMERGENCY",
+  "LOCAL_INFO",
+  "OTHER",
+] as const;
+export type KnowledgeCategory = (typeof KNOWLEDGE_CATEGORIES)[number];
+
+export const KNOWLEDGE_VISIBILITIES = ["PUBLIC", "STAY", "INTERNAL"] as const;
+export type KnowledgeVisibility = (typeof KNOWLEDGE_VISIBILITIES)[number];
+
+export const STAY_PHASES = ["UPCOMING", "ARRIVING_TODAY", "IN_HOUSE", "DEPARTING_TODAY", "DEPARTED"] as const;
+export type StayPhase = (typeof STAY_PHASES)[number];

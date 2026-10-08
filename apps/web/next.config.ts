@@ -32,6 +32,8 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_URL: apiUrl,
   },
   poweredByHeader: false,
+  // The floating dev-tools badge sits on top of the guest portal's bottom tab bar.
+  devIndicators: false,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

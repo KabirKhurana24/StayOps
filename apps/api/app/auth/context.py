@@ -36,6 +36,19 @@ class Actor:
     def system(cls, label: str = "system") -> Actor:
         return cls(type=ActorType.SYSTEM, id=None, label=label)
 
+    @classmethod
+    def guest(cls, guest_id: uuid.UUID, label: str) -> Actor:
+        return cls(type=ActorType.GUEST, id=guest_id, label=label)
+
+
+@dataclass(frozen=True, slots=True)
+class GuestScope:
+    """The one stay a guest-portal request may touch (resolved from the link token)."""
+
+    guest_id: uuid.UUID
+    reservation_id: uuid.UUID
+    link_id: uuid.UUID | None = None  # None for seeded/imported guest activity
+
 
 @dataclass(frozen=True, slots=True)
 class TenantContext:
@@ -50,6 +63,10 @@ class TenantContext:
     role: Role
     actor: Actor
     source: str = "api"
+    # Set only for guest-portal requests. Such contexts carry the VIEWER role (no
+    # write permission anywhere) and guest-facing services scope every query to
+    # this stay; staff routes never accept them (they require a member JWT).
+    guest_scope: GuestScope | None = None
 
     @classmethod
     def system(cls, organization_id: uuid.UUID, label: str = "Automation") -> TenantContext:
@@ -60,6 +77,20 @@ class TenantContext:
             actor=Actor.system(label),
             source="worker",
         )
+
+    @classmethod
+    def for_guest(cls, organization_id: uuid.UUID, scope: GuestScope, label: str) -> TenantContext:
+        return cls(
+            organization_id=organization_id,
+            role=Role.VIEWER,
+            actor=Actor.guest(scope.guest_id, label),
+            source="guest_portal",
+            guest_scope=scope,
+        )
+
+    @property
+    def is_guest(self) -> bool:
+        return self.guest_scope is not None
 
     @property
     def is_staff(self) -> bool:

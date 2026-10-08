@@ -41,7 +41,13 @@ Each module owns `models.py`, `schemas.py` (DTOs — ORM models are never return
 
 - `organizations` — organizations, members, roles, profiles (mirror of `auth.users`)
 - `properties` — properties (with IANA timezone + default check-in/out times) and units
-- `guests` — guest records (email unique per org, case-insensitive)
+- `guests` — guest records (email unique per org, case-insensitive), preferences, private notes
+- `tasks`, `cleaning`, `maintenance`, `operations` — operational work and automation (Phase 3)
+- `inbox` — conversations, ordered messages, read state, system notes (Phase 4)
+- `guest_requests` — guest requests and their conversion into tasks / work orders
+- `knowledge` — structured property knowledge (the guest guide; AI grounding source)
+- `guest_portal` — hashed per-stay access links and guest-facing read models
+- `channels` — `ChannelAdapter` boundary (in-app connected; providers not configured)
 - `reservations` — booking lifecycle, state machine, availability
 - `command_center` — read model: today per property timezone, metrics, signals
 - `events` — `DomainEvent`, idempotent `publish`, `EventDispatcher`, subscriber registry, worker

@@ -6,6 +6,7 @@
 import { z } from "zod";
 
 import {
+  ACTOR_TYPES,
   EVENT_STATUSES,
   PERMISSIONS,
   PROPERTY_STATUSES,
@@ -132,6 +133,16 @@ export const guestStatsSchema = z.object({
       unit_name: z.string(),
     })
     .nullable(),
+  properties: z
+    .array(
+      z.object({
+        property_id: uuid,
+        property_name: z.string(),
+        stays: z.number().int(),
+        last_check_out: isoDateTime.nullable(),
+      }),
+    )
+    .default([]),
 });
 export type GuestStats = z.infer<typeof guestStatsSchema>;
 
@@ -142,11 +153,39 @@ export const guestSchema = z.object({
   last_name: z.string(),
   email: z.string().nullable(),
   phone: z.string().nullable(),
+  /** Structured stay preferences (see GuestPreferences). */
+  preferences: z.record(z.string(), z.unknown()).default({}),
+  /** Private team notes — staff API only, never shown to guests. */
+  notes: z.string().nullable().default(null),
+  version: z.number().int().default(1),
   stats: guestStatsSchema.nullable().optional(),
   created_at: isoDateTime,
   updated_at: isoDateTime,
 });
 export type Guest = z.infer<typeof guestSchema>;
+
+export const GUEST_PREFERENCE_FIELDS = [
+  "preferred_language",
+  "contact_channel",
+  "usually_requests_early_check_in",
+  "usually_requests_late_checkout",
+  "bedding",
+  "accessibility",
+  "dietary",
+  "occasions",
+  "other",
+] as const;
+export type GuestPreferences = {
+  preferred_language?: string;
+  contact_channel?: "IN_APP" | "EMAIL" | "SMS" | "WHATSAPP" | "PHONE";
+  usually_requests_early_check_in?: boolean;
+  usually_requests_late_checkout?: boolean;
+  bedding?: string;
+  accessibility?: string;
+  dietary?: string;
+  occasions?: string;
+  other?: string;
+};
 
 export const reservationSchema = z.object({
   id: uuid,
@@ -180,7 +219,7 @@ export type Reservation = z.infer<typeof reservationSchema>;
 export const auditLogSchema = z.object({
   id: uuid,
   organization_id: uuid,
-  actor_type: z.enum(["USER", "SYSTEM", "INTEGRATION", "AI_AGENT"]),
+  actor_type: z.enum(ACTOR_TYPES),
   actor_id: uuid.nullable(),
   actor_label: z.string().nullable(),
   action: z.string(),
@@ -221,6 +260,8 @@ export const signalSchema = z.object({
   task_id: uuid.nullable().optional(),
   cleaning_id: uuid.nullable().optional(),
   work_order_id: uuid.nullable().optional(),
+  conversation_id: uuid.nullable().optional(),
+  guest_request_id: uuid.nullable().optional(),
 });
 export type OperationalSignal = z.infer<typeof signalSchema>;
 
@@ -246,6 +287,8 @@ export const commandCenterSchema = z.object({
     active_maintenance: z.number().int(),
     urgent_maintenance: z.number().int(),
     blocked_units: z.number().int(),
+    unread_conversations: z.number().int().default(0),
+    open_guest_requests: z.number().int().default(0),
     revenue_this_month: z.array(z.object({ currency: z.string(), amount: money })),
   }),
   check_ins: z.array(reservationSchema),

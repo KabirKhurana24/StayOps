@@ -19,10 +19,13 @@ export const SIGNAL_META: Record<string, { category: string; action: string }> =
   failed_inspection: { category: "Inspection failed", action: "Open" },
   high_priority_maintenance: { category: "Maintenance", action: "Open" },
   blocked_unit: { category: "Blocked unit", action: "View" },
+  guest_waiting: { category: "Guest waiting", action: "Reply" },
+  open_guest_request: { category: "Guest request", action: "Open" },
 };
 
 /** Where a signal's primary action leads: the most specific record it references. */
 export function signalHref(signal: OperationalSignal): string | null {
+  if (signal.conversation_id) return `/inbox?c=${signal.conversation_id}`;
   if (signal.cleaning_id) return `/cleaning?c=${signal.cleaning_id}`;
   if (signal.task_id) return `/tasks?t=${signal.task_id}`;
   if (signal.work_order_id) return `/maintenance?wo=${signal.work_order_id}`;

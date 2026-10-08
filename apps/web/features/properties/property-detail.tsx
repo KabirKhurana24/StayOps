@@ -26,13 +26,14 @@ import { useWorkOrders } from "@/features/maintenance/api";
 import { MaintenanceStatusBadge, PriorityLabel, UnitOpsBadge } from "@/features/operations/components/badges";
 import { ApiError } from "@/lib/api/client";
 import { formatDay, formatShortDate, formatTime, guestName, plural } from "@/lib/format";
+import { KnowledgePanel } from "@/features/knowledge/knowledge-panel";
 import { useSearchState } from "@/lib/use-search-state";
 import { cn } from "@/lib/utils";
 
 import { PropertyForm, UnitForm } from "./components/property-forms";
 import { cityFromTimezone, localClock, PropertyStateBadge } from "./components/property-state";
 
-type Tab = "overview" | "units" | "reservations" | "operations" | "maintenance" | "activity";
+type Tab = "overview" | "units" | "reservations" | "operations" | "maintenance" | "guide" | "activity";
 
 const UNIT_TONE = { ACTIVE: "success", MAINTENANCE: "warning", INACTIVE: "neutral" } as const;
 
@@ -353,6 +354,7 @@ export function PropertyDetail({ id }: { id: string }) {
           { value: "reservations", label: "Reservations" },
           { value: "operations", label: "Operations" },
           { value: "maintenance", label: "Maintenance", count: maintenance.length || undefined },
+          { value: "guide", label: "Guest guide" },
           { value: "activity", label: "Activity" },
         ]}
       />
@@ -397,6 +399,8 @@ export function PropertyDetail({ id }: { id: string }) {
           </div>
         ) : tab === "operations" ? (
           <OperationsTab propertyId={p.id} onOpen={openReservation} />
+        ) : tab === "guide" ? (
+          <KnowledgePanel propertyId={p.id} units={unitList} canWrite={can(org.data, "knowledge:write")} />
         ) : tab === "maintenance" ? (
           <div className="space-y-5">
             <Panel title="Units in maintenance" count={maintenance.length} icon={<Wrench />}>

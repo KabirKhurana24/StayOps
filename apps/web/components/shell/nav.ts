@@ -43,7 +43,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "People",
     items: [
       { label: "Guests", icon: Users, href: "/guests" },
-      { label: "Inbox", icon: Inbox, soon: true, description: "Unified guest messaging" },
+      { label: "Inbox", icon: Inbox, href: "/inbox" },
     ],
   },
   {
@@ -83,6 +83,7 @@ export function crumbsFor(pathname: string): { label: string; href?: string }[] 
     Guests: "Guest",
     Tasks: "Task",
     Maintenance: "Work order",
+    Inbox: "Conversation",
   };
   return [{ label: section.label, href: section.href }, { label: singular[section.label] ?? "Detail" }];
 }

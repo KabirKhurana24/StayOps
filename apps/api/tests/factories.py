@@ -16,6 +16,7 @@ so event subscribers (turnover automation, unit blocking) run as in production.
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -23,9 +24,18 @@ from sqlalchemy.orm import Session
 
 from app.auth.context import Actor, CurrentUser, TenantContext
 from app.events.dispatcher import commit_and_dispatch
+from app.guest_portal import service as portal
+from app.guest_requests import service as guest_requests
+from app.guest_requests.models import GuestRequest, GuestRequestType
+from app.guest_requests.schemas import GuestRequestCreate
 from app.guests import service as guests
 from app.guests.models import Guest
 from app.guests.schemas import GuestCreate
+from app.inbox import service as inbox
+from app.inbox.models import Channel, Conversation, Message
+from app.knowledge import service as knowledge
+from app.knowledge.models import KnowledgeCategory, KnowledgeVisibility, PropertyKnowledge
+from app.knowledge.schemas import KnowledgeCreate
 from app.maintenance import service as maintenance
 from app.maintenance.schemas import WorkOrderCreate
 from app.organizations.models import Organization, Role
@@ -41,15 +51,22 @@ from app.tasks.schemas import TaskCreate
 from tests.conftest import Member, add_member, make_org
 
 __all__ = [
+    "PortalAccess",
     "ctx_for",
+    "make_conversation",
     "make_guest",
+    "make_guest_request",
+    "make_knowledge",
     "make_member",
     "make_org",
+    "make_portal_access",
     "make_property",
     "make_reservation",
     "make_task",
     "make_unit",
     "make_work_order",
+    "post_guest_message",
+    "post_staff_message",
     "transition",
 ]
 
@@ -165,3 +182,94 @@ def make_work_order(db: Session, member: Member, unit: Unit, **body: Any) -> uui
     order_id = maintenance.create_work_order(db, ctx_for(member), data)
     commit_and_dispatch(db)
     return order_id
+
+
+# ------------------------------------------------------------------ Phase 4
+
+
+def make_conversation(
+    db: Session, member: Member, reservation: Reservation, channel: Channel = Channel.IN_APP
+) -> Conversation:
+    conv, _ = inbox.get_or_create_stay_conversation(db, ctx_for(member), reservation, channel)
+    commit_and_dispatch(db)
+    return conv
+
+
+def post_staff_message(
+    db: Session, member: Member, conv: Conversation, content: str, *, internal: bool = False
+) -> Message:
+    mid = inbox.send_message(db, ctx_for(member), conv.id, content, internal=internal)
+    commit_and_dispatch(db)
+    return db.get_one(Message, mid)
+
+
+@dataclass
+class PortalAccess:
+    """A guest-portal link for one stay: the raw token and its resolved session."""
+
+    token: str
+    reservation: Reservation
+
+    @property
+    def headers(self) -> dict[str, str]:
+        return {"X-Guest-Token": self.token}
+
+    def session(self, db: Session) -> portal.GuestSession:
+        return portal.resolve_session(db, self.token)
+
+
+def make_portal_access(db: Session, member: Member, reservation: Reservation) -> PortalAccess:
+    issued = portal.issue_link(db, ctx_for(member), reservation.id)
+    commit_and_dispatch(db)
+    return PortalAccess(token=issued.token, reservation=reservation)
+
+
+def post_guest_message(db: Session, access: PortalAccess, content: str) -> Message:
+    mid = portal.send_guest_message(db, access.session(db), content, None)
+    commit_and_dispatch(db)
+    return db.get_one(Message, mid)
+
+
+def make_guest_request(
+    db: Session,
+    member: Member,
+    conv: Conversation,
+    request_type: GuestRequestType = GuestRequestType.EXTRA_TOWELS,
+    description: str = "Could we get two extra bath towels?",
+    **overrides: Any,
+) -> GuestRequest:
+    rid = guest_requests.create_request(
+        db,
+        ctx_for(member),
+        GuestRequestCreate(
+            conversation_id=conv.id, type=request_type, description=description, **overrides
+        ),
+    )
+    commit_and_dispatch(db)
+    return db.get_one(GuestRequest, rid)
+
+
+def make_knowledge(
+    db: Session,
+    member: Member,
+    prop: Property,
+    category: KnowledgeCategory = KnowledgeCategory.WIFI,
+    title: str = "Wi-Fi",
+    content: str = "Network: CanalView-Guest · Password: tulips2026",
+    visibility: KnowledgeVisibility = KnowledgeVisibility.PUBLIC,
+    unit: Unit | None = None,
+) -> PropertyKnowledge:
+    eid = knowledge.create_entry(
+        db,
+        ctx_for(member),
+        prop.id,
+        KnowledgeCreate(
+            category=category,
+            title=title,
+            content=content,
+            visibility=visibility,
+            unit_id=unit.id if unit else None,
+        ),
+    )
+    commit_and_dispatch(db)
+    return db.get_one(PropertyKnowledge, eid)

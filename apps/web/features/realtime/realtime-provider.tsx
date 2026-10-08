@@ -38,8 +38,17 @@ const INVALIDATES: Record<BroadcastTable, QueryKey[]> = {
   guests: [queryKeys.guests.all, queryKeys.reservations.all, queryKeys.calendar.all],
   events: [queryKeys.events.all],
   audit_logs: [queryKeys.audit.all, queryKeys.commandCenter],
-  // Operations: a task change moves boards, workload, unit state and the Command Center.
-  tasks: [queryKeys.tasks.all, queryKeys.cleanings.all, queryKeys.operations.all, queryKeys.units.all, queryKeys.commandCenter],
+  // Operations: a task change moves boards, workload, unit state and the Command Center —
+  // and the inbox context panel's "work" list and any linked guest request.
+  tasks: [
+    queryKeys.tasks.all,
+    queryKeys.cleanings.all,
+    queryKeys.operations.all,
+    queryKeys.units.all,
+    queryKeys.commandCenter,
+    queryKeys.inbox.all,
+    queryKeys.guestRequests.all,
+  ],
   cleanings: [queryKeys.cleanings.all, queryKeys.tasks.all, queryKeys.operations.all, queryKeys.units.all, queryKeys.commandCenter],
   // Maintenance can block a unit: availability (under reservations), calendar and property views follow.
   maintenance_work_orders: [
@@ -51,7 +60,14 @@ const INVALIDATES: Record<BroadcastTable, QueryKey[]> = {
     queryKeys.reservations.all,
     queryKeys.calendar.all,
     queryKeys.commandCenter,
+    queryKeys.inbox.all,
+    queryKeys.guestRequests.all,
   ],
+  // Inbox: ordering, unread counts and open threads follow every message.
+  conversations: [queryKeys.inbox.all, queryKeys.commandCenter],
+  messages: [queryKeys.inbox.all, queryKeys.commandCenter],
+  guest_requests: [queryKeys.guestRequests.all, queryKeys.inbox.all, queryKeys.commandCenter],
+  property_knowledge: [queryKeys.knowledge.all],
 };
 
 const FLUSH_MS = 120; // one mutation fans out to several tables; batch the refetches
@@ -101,6 +117,11 @@ export function RealtimeProvider({ topic, children }: { topic: string | undefine
                 ? queryKeys.maintenance.detail(change.id)
                 : null;
       if (detail) pending.set(JSON.stringify(detail), detail);
+      // An open thread refreshes from its own notices (the id rides on the payload).
+      if (change.conversation_id) {
+        const thread = queryKeys.inbox.messages(change.conversation_id);
+        pending.set(JSON.stringify(thread), thread);
+      }
       timer ??= setTimeout(flush, FLUSH_MS);
 
       const ids = [change.id, change.entity_id, change.aggregate_id].filter(

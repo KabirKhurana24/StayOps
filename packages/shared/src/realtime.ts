@@ -13,6 +13,10 @@ export const BROADCAST_TABLES = [
   "tasks",
   "cleanings",
   "maintenance_work_orders",
+  "conversations",
+  "messages",
+  "guest_requests",
+  "property_knowledge",
 ] as const;
 export type BroadcastTable = (typeof BROADCAST_TABLES)[number];
 
@@ -31,6 +35,7 @@ export const broadcastPayloadSchema = z.object({
   entity_type: z.string().optional(),
   entity_id: z.string().optional(),
   aggregate_id: z.string().optional(),
+  conversation_id: z.string().optional(),
   at: z.string().optional(),
 });
 export type BroadcastPayload = z.infer<typeof broadcastPayloadSchema>;

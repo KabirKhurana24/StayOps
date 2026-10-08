@@ -17,6 +17,7 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from app.audit.models import AuditLog
 from app.auth.context import TenantContext
+from app.command_center.guests import guest_metrics, guest_signals
 from app.command_center.operations import operations_metrics, operations_signals
 from app.command_center.schemas import (
     CommandCenterMetrics,
@@ -357,7 +358,9 @@ def build_command_center(
     )
 
     signals = _signals(session, ctx, as_of, check_ins, check_outs)
+    signals += guest_signals(session, ctx, as_of)
     ops = operations_metrics(session, ctx, as_of)
+    guests = guest_metrics(session, ctx)
     recent = session.scalars(
         select(AuditLog)
         .where(AuditLog.organization_id == ctx.organization_id)
@@ -399,5 +402,7 @@ def build_command_center(
             active_maintenance=ops.active_maintenance,
             urgent_maintenance=ops.urgent_maintenance,
             blocked_units=ops.blocked_units,
+            unread_conversations=guests.unread_conversations,
+            open_guest_requests=guests.open_guest_requests,
         ),
     )

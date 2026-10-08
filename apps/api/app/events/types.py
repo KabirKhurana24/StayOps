@@ -17,6 +17,7 @@ class EventType(StrEnum):
     UNIT_BLOCKED = "unit.blocked"
     UNIT_UNBLOCKED = "unit.unblocked"
     GUEST_CREATED = "guest.created"
+    GUEST_UPDATED = "guest.updated"
     RESERVATION_CREATED = "reservation.created"
     RESERVATION_UPDATED = "reservation.updated"
     RESERVATION_CANCELLED = "reservation.cancelled"
@@ -44,6 +45,20 @@ class EventType(StrEnum):
     MAINTENANCE_BLOCKED = "maintenance.blocked"
     MAINTENANCE_RESOLVED = "maintenance.resolved"
     MAINTENANCE_CLOSED = "maintenance.closed"
+    CONVERSATION_CREATED = "conversation.created"
+    CONVERSATION_UPDATED = "conversation.updated"
+    CONVERSATION_ASSIGNED = "conversation.assigned"
+    MESSAGE_CREATED = "message.created"
+    MESSAGE_READ = "message.read"
+    GUEST_REQUEST_CREATED = "guest_request.created"
+    GUEST_REQUEST_UPDATED = "guest_request.updated"
+    GUEST_REQUEST_RESOLVED = "guest_request.resolved"
+    GUEST_REQUEST_CLOSED = "guest_request.closed"
+    KNOWLEDGE_CREATED = "knowledge.created"
+    KNOWLEDGE_UPDATED = "knowledge.updated"
+    KNOWLEDGE_ARCHIVED = "knowledge.archived"
+    GUEST_PORTAL_LINK_CREATED = "guest_portal.link_created"
+    GUEST_PORTAL_LINK_REVOKED = "guest_portal.link_revoked"
 
 
 class AggregateType(StrEnum):
@@ -55,6 +70,11 @@ class AggregateType(StrEnum):
     TASK = "task"
     CLEANING = "cleaning"
     MAINTENANCE = "maintenance"
+    CONVERSATION = "conversation"
+    MESSAGE = "message"
+    GUEST_REQUEST = "guest_request"
+    KNOWLEDGE = "knowledge"
+    GUEST_PORTAL_LINK = "guest_portal_link"
 
 
 @dataclass(frozen=True, slots=True)

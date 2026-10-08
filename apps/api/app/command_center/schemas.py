@@ -30,6 +30,8 @@ class OperationalSignal(BaseModel):
     task_id: uuid.UUID | None = None
     cleaning_id: uuid.UUID | None = None
     work_order_id: uuid.UUID | None = None
+    conversation_id: uuid.UUID | None = None
+    guest_request_id: uuid.UUID | None = None
 
 
 class MoneyAmount(BaseModel):
@@ -58,6 +60,9 @@ class CommandCenterMetrics(BaseModel):
     active_maintenance: int
     urgent_maintenance: int
     blocked_units: int
+    # Guest experience (Phase 4) — zero for roles without inbox access.
+    unread_conversations: int = 0
+    open_guest_requests: int = 0
     # Booked value of non-cancelled stays starting this (property-local) month, per
     # currency: amounts in different currencies are never summed together.
     revenue_this_month: list[MoneyAmount]

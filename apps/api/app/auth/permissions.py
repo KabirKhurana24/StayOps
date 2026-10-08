@@ -35,6 +35,10 @@ class Permission(StrEnum):
     MAINTENANCE_READ = "maintenance:read"
     MAINTENANCE_MANAGE = "maintenance:manage"
     MAINTENANCE_WORK = "maintenance:work"
+    INBOX_READ = "inbox:read"
+    INBOX_WRITE = "inbox:write"
+    GUEST_REQUESTS_MANAGE = "guest_requests:manage"
+    KNOWLEDGE_WRITE = "knowledge:write"
 
 
 _READ = {
@@ -46,6 +50,9 @@ _READ = {
     Permission.TASKS_READ,
     Permission.MAINTENANCE_READ,
 }
+# Guest communications are front-of-house: viewers may read the inbox, staff (who
+# work assigned tasks) don't see guest conversations at all.
+_VIEW = _READ | {Permission.INBOX_READ}
 # Staff see the operation (properties, calendar) but only act on their own work;
 # task/work-order visibility is narrowed to "mine" in the services.
 _STAFF = _READ | {Permission.TASKS_WORK, Permission.MAINTENANCE_WORK}
@@ -55,6 +62,10 @@ _OPERATE = _STAFF | {
     Permission.UNITS_WRITE,
     Permission.TASKS_MANAGE,
     Permission.MAINTENANCE_MANAGE,
+    Permission.INBOX_READ,
+    Permission.INBOX_WRITE,
+    Permission.GUEST_REQUESTS_MANAGE,
+    Permission.KNOWLEDGE_WRITE,
 }
 _ADMIN = _OPERATE | {Permission.PROPERTIES_WRITE, Permission.ORG_MANAGE}
 
@@ -63,7 +74,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     Role.ADMIN: frozenset(_ADMIN),
     Role.OPERATOR: frozenset(_OPERATE),
     Role.STAFF: frozenset(_STAFF),
-    Role.VIEWER: frozenset(_READ),
+    Role.VIEWER: frozenset(_VIEW),
 }
 
 # Members who can be given operational work (tasks, work orders).

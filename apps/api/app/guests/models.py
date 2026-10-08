@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from sqlalchemy import CheckConstraint, Index, String, UniqueConstraint, func, text
+from typing import Any
+
+from sqlalchemy import CheckConstraint, Index, Integer, String, UniqueConstraint, func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin, TimestampMixin, UUIDPrimaryKeyMixin
@@ -27,3 +30,14 @@ class Guest(UUIDPrimaryKeyMixin, TenantMixin, TimestampMixin, Base):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str | None] = mapped_column(String(320))
     phone: Mapped[str | None] = mapped_column(String(32))
+    # Structured stay preferences (see guests.schemas.GuestPreferences). Shared with
+    # the team; never shown to other guests.
+    preferences: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    # Private team notes. Internal only: never exposed through the guest portal or
+    # to AI guest agents.
+    notes: Mapped[str | None] = mapped_column(String(4000))
+    version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
+
+    __mapper_args__ = {"version_id_col": version}  # noqa: RUF012

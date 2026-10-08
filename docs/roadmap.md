@@ -20,12 +20,15 @@ seed, backend + E2E tests.
   with backoff and parking (see [worker.md](worker.md)) — no broker needed.
 - Later: member invitations and role management; mobile-first cleaner view.
 
-## Phase 3 — Unified guest inbox
-- Conversations and messages per reservation; channel adapters (email, SMS via Twilio,
-  OTA messaging via integrations). Realtime for new messages.
-
-## Phase 4 — Guest portal
-- Tokenized per-reservation portal: check-in instructions, ID/registration, upsells.
+## Guest experience: unified inbox + guest portal ✅
+- Conversations (one per stay and channel), ordered messages with per-side read
+  state, internal notes and operational system notes; realtime inbox.
+- Guest requests that convert into tasks or work orders and resolve themselves when
+  the work is done; structured property knowledge with PUBLIC / STAY / INTERNAL
+  visibility; tokenized per-stay guest portal (stay, guide, messages, requests).
+- Channel adapter interface; in-app connected, Twilio / WhatsApp / Hostaway / Airbnb /
+  Booking.com report NOT_CONFIGURED. See [guest-experience.md](guest-experience.md).
+- Later: provider integrations, ID/registration and upsells in the portal.
 
 ## Phase 5 — Payments, expenses, owner portal
 - Stripe adapter (payment intents, payouts, webhooks → idempotent events).
