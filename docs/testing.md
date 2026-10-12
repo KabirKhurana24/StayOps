@@ -92,3 +92,13 @@ services twice on real PostgreSQL and asserts identical results.
 All AI tests use the deterministic `MockProvider`; no test calls a paid LLM. Tests
 marked `llm_live` are skipped unless `STAYOPS_LIVE_LLM=1` and a provider key are set
 (see [ai.md](ai.md)).
+
+## Autopilot tests
+
+`tests/test_automation_*.py`: engine units (validation, conditions, templating, DST
+schedules — no database), authoring/versions/roles/tenancy, execution (idempotency,
+retries, crash recovery, loop guard, turnover de-duplication), approvals (stale,
+double-approve, cross-tenant), simulation (all table counts unchanged), scheduler and
+AI drafting (mock provider). `test_automation_realtime.py` is in the Supabase tier.
+`e2e/automations.spec.ts` covers the operator flow end to end with two browsers.
+

@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bot,
   BarChart3,
   BedDouble,
   Building2,
@@ -37,6 +38,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Tasks", icon: ListChecks, href: "/tasks" },
       { label: "Cleaning", icon: Sparkles, href: "/cleaning" },
       { label: "Maintenance", icon: Wrench, href: "/maintenance" },
+      { label: "Copilot", icon: Bot, href: "/copilot" },
     ],
   },
   {
@@ -57,7 +59,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "System",
     items: [
       { label: "Activity", icon: Activity, href: "/activity" },
-      { label: "Automations", icon: Workflow, soon: true, description: "Event-driven workflows" },
+      { label: "Automations", icon: Workflow, href: "/automations" },
       { label: "Settings", icon: Settings, soon: true, description: "Organization, team and integrations" },
     ],
   },
@@ -84,6 +86,7 @@ export function crumbsFor(pathname: string): { label: string; href?: string }[] 
     Tasks: "Task",
     Maintenance: "Work order",
     Inbox: "Conversation",
+    Automations: "Workflow",
   };
   return [{ label: section.label, href: section.href }, { label: singular[section.label] ?? "Detail" }];
 }

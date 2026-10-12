@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import Select, func, select, update
 from sqlalchemy.orm import Session
 
+from app.ai.schemas import GuestAssistantOut, GuestRunStep
 from app.auth.context import GuestScope, TenantContext
 from app.auth.permissions import Permission
 from app.core.errors import AppError, DomainValidationError, NotFoundError
@@ -501,3 +502,48 @@ def create_guest_request(
 
 def cancel_guest_request(session: Session, gs: GuestSession, request_id: uuid.UUID) -> uuid.UUID:
     return requests.cancel_request(session, gs.ctx, request_id)
+
+
+# ------------------------------------------------------------------ guest: assistant
+
+
+def assistant_state(session: Session, gs: GuestSession) -> GuestAssistantOut:
+    """On/off plus the latest run's progress labels (no tools, no summaries)."""
+    from app.ai import service as ai
+    from app.ai.models import AgentType, AIRun, AIRunStep, RunStatus
+    from app.ai.providers import get_provider
+    from app.config.settings import get_settings
+
+    conv = _conversation(session, gs)
+    enabled = get_provider(get_settings()) is not None and (conv is None or conv.assistant_enabled)
+    if conv is None:
+        return GuestAssistantOut(enabled=enabled, running=False, steps=[], status=None)
+    run = session.scalars(
+        select(AIRun)
+        .where(
+            AIRun.organization_id == gs.ctx.organization_id,
+            AIRun.conversation_id == conv.id,
+            AIRun.agent_type == AgentType.GUEST_AGENT,
+            AIRun.guest_id == gs.guest.id,
+        )
+        .order_by(AIRun.started_at.desc())
+        .limit(1)
+    ).first()
+    if run is None:
+        return GuestAssistantOut(enabled=enabled, running=False, steps=[], status=None)
+    steps = session.scalars(
+        select(AIRunStep)
+        .where(AIRunStep.run_id == run.id, AIRunStep.organization_id == run.organization_id)
+        .order_by(AIRunStep.seq)
+    ).all()
+    status = ai.effective_status(run)
+    return GuestAssistantOut(
+        enabled=enabled,
+        running=status == RunStatus.RUNNING,
+        steps=[
+            GuestRunStep(label=s.label, status=s.status)
+            for s in steps
+            if s.kind.value not in ("LLM", "CONTEXT")
+        ],
+        status=status,
+    )

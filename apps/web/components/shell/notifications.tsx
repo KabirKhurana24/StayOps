@@ -57,9 +57,9 @@ export function Notifications() {
                 </div>
               );
               return (
-                <li key={`${s.code}-${s.reservation_id ?? i}`}>
-                  {s.reservation_id ? (
-                    <Link href={`/reservations?r=${s.reservation_id}`} onClick={() => setOpen(false)} className="block hover:bg-muted/50">
+                <li key={`${s.code}-${s.alert_id ?? s.reservation_id ?? i}`}>
+                  {s.reservation_id || s.href ? (
+                    <Link href={s.href ?? `/reservations?r=${s.reservation_id}`} onClick={() => setOpen(false)} className="block hover:bg-muted/50">
                       {body}
                     </Link>
                   ) : (

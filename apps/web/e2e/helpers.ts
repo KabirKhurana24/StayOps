@@ -2,6 +2,8 @@ import { expect, type Page } from "@playwright/test";
 
 export const DEMO_EMAIL = process.env.SEED_DEMO_EMAIL ?? "demo@stayops.dev";
 export const DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD ?? "";
+// A write against the remote Supabase database takes several round trips (~0.3 s each).
+export const REMOTE_WRITE_TIMEOUT = 90_000;
 
 export function requireDemoCredentials() {
   if (!DEMO_PASSWORD) {
@@ -57,7 +59,7 @@ export async function createReservationViaUi(page: Page, booking: Booking, unit 
   await form.getByLabel("Last name").fill(booking.lastName);
   await form.getByLabel("Total amount").fill("420.00");
   await form.getByRole("button", { name: "Create reservation" }).click();
-  await expect(page.getByText(/Reservation SO-[A-Z0-9]+ created/)).toBeVisible();
+  await expect(page.getByText(/Reservation SO-[A-Z0-9]+ created/)).toBeVisible({ timeout: REMOTE_WRITE_TIMEOUT });
 }
 
 /** Opens a reservation's drawer from the (filtered) reservations table. */
@@ -76,5 +78,5 @@ export async function editDatesViaUi(page: Page, checkIn: string, checkOut: stri
   await form.getByLabel("Check-in", { exact: true }).fill(checkIn);
   await expect(form.getByTestId("unit-availability")).toBeVisible();
   await form.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.getByText(/Saved SO-[A-Z0-9]+/)).toBeVisible();
+  await expect(page.getByText(/Saved SO-[A-Z0-9]+/)).toBeVisible({ timeout: REMOTE_WRITE_TIMEOUT });
 }

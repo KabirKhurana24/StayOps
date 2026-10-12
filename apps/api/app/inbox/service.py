@@ -236,6 +236,7 @@ def to_out(view: ConversationView) -> ConversationOut:
         status=c.status,
         priority=c.priority,
         subject=c.subject,
+        assistant_enabled=c.assistant_enabled,
         guest=GuestRef(
             id=g.id, first_name=g.first_name, last_name=g.last_name, email=g.email, phone=g.phone
         ),
@@ -649,7 +650,7 @@ def update_conversation(
     conv = load_conversation(session, ctx, conversation_id)
     _check_version(conv, data.expected_version)
     changes_in = data.model_dump(exclude_unset=True, exclude={"expected_version"})
-    tracked = ("status", "priority", "subject")
+    tracked = ("status", "priority", "subject", "assistant_enabled")
     before = {f: getattr(conv, f) for f in tracked}
     changes = diff(before, {**before, **changes_in})
     if not changes:
@@ -711,10 +712,11 @@ def assign_conversation(
 
 
 def _sender_for(ctx: TenantContext) -> tuple[SenderType, uuid.UUID | None, str | None]:
-    if ctx.is_guest:
-        return SenderType.GUEST, ctx.actor.id, ctx.actor.label
+    # The guest assistant carries the guest's stay scope but speaks as the AI.
     if ctx.actor.type.value == "AI_AGENT":
         return SenderType.AI, ctx.actor.id, ctx.actor.label
+    if ctx.is_guest:
+        return SenderType.GUEST, ctx.actor.id, ctx.actor.label
     if ctx.actor.type.value == "USER":
         return SenderType.STAFF, ctx.actor.id, ctx.actor.label
     return SenderType.SYSTEM, None, ctx.actor.label or SYSTEM_LABEL
@@ -854,7 +856,7 @@ def send_message(
     sends always use the server clock.
     """
     conv = load_conversation(session, ctx, conversation_id)
-    if ctx.is_guest:
+    if ctx.is_guest or ctx.actor.type.value == "AI_AGENT":
         if internal:
             raise PermissionDeniedError()
     elif ctx.actor.type.value == "USER":

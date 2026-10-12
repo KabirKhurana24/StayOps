@@ -1,0 +1,37 @@
+warning: in the working copy of '.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/app/command_center/service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/app/guest_portal/router.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/app/guest_portal/service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/app/guest_requests/service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/app/inbox/models.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/app/inbox/schemas.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/app/inbox/service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/pyproject.toml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/api/tests/conftest.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/components/shell/nav.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/components/shell/notifications.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/e2e/helpers.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/features/command-center/command-center.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/features/command-center/signals.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/features/guest-portal/api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/features/guest-portal/guest-messages.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/features/inbox/api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/features/inbox/components/conversation-thread.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/features/realtime/realtime-provider.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/lib/api/query-keys.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/lib/format.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/web/playwright.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/architecture.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/realtime.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/roadmap.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/security.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/testing.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/worker.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'packages/shared/src/enums.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'packages/shared/src/inbox-schemas.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'packages/shared/src/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'packages/shared/src/realtime.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'packages/shared/src/schemas.ts', LF will be replaced by CRLF the next time Git touches it
+docs/testing.md:104: new blank line at EOF.
+docs/worker.md:66: new blank line at EOF.

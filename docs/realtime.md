@@ -36,6 +36,9 @@ Implemented in:
 | `messages` | insert, update, delete | inbox, the open thread (`conversation_id`), command center |
 | `guest_requests` | insert, update, delete | requests, inbox, command center |
 | `property_knowledge` | insert, update, delete | property guides |
+| `automation_workflows`, `automation_workflow_versions` | insert, update, delete | workflow library, open editor, Autopilot overview |
+| `automation_executions`, `automation_step_executions` | insert, update, delete | execution history, open execution timeline, overview |
+| `automation_approvals`, `operational_alerts` | insert, update, delete | approval queue, alerts, command center / bell |
 | `events` | insert | event stream |
 | `audit_logs` | insert | audit timelines, command center (recent activity) |
 
@@ -51,8 +54,9 @@ Minimal, no PII:
 ```
 
 Audit/event notices add `action` / `event_type`, `entity_id` / `aggregate_id`;
-inbox notices add `conversation_id` (migration 0005). Message content never rides
-on a notice.
+inbox notices add `conversation_id` (migration 0005); AI notices `run_id` (0006);
+Autopilot notices `workflow_id` / `execution_id` (0007). Message content, execution
+context and action inputs never ride on a notice.
 
 The guest portal does **not** use Supabase Realtime: guests have no Supabase
 session and must never join an organization topic. It polls its stay-scoped

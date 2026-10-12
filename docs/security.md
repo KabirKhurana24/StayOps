@@ -74,6 +74,18 @@ never reaches server logs or `Referer`. See [guest-experience.md](guest-experien
 - Open-redirect protection on `?next=` (login and auth callback).
 - OpenAPI docs disabled when `APP_ENV=production`.
 
+## Autopilot
+
+- Workflows are data validated against an allowlist (catalog): no code, SQL or
+  expressions; unsupported triggers, fields, operators and actions are rejected, and
+  ids in a definition (members, properties) must belong to the organization.
+- Publishing requires every permission the workflow's actions need; workflows act with
+  OPERATOR authority as `Autopilot · <name>`, and approved actions run as the approving
+  human after revalidation (stale approvals are refused).
+- Execution context holds typed operational facts only (no guest contact details or
+  message text); errors stored on steps are domain messages, never internals.
+- AI drafting can only propose; validation and publication are the operator's.
+
 ## Known gaps / next steps
 
 - Rate limiting (planned with Redis) and account lockout policies (Supabase settings).

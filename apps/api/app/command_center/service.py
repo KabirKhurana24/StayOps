@@ -17,6 +17,8 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from app.audit.models import AuditLog
 from app.auth.context import TenantContext
+from app.auth.permissions import Permission
+from app.command_center.automation import automation_signals
 from app.command_center.guests import guest_metrics, guest_signals
 from app.command_center.operations import operations_metrics, operations_signals
 from app.command_center.schemas import (
@@ -359,6 +361,10 @@ def build_command_center(
 
     signals = _signals(session, ctx, as_of, check_ins, check_outs)
     signals += guest_signals(session, ctx, as_of)
+    if ctx.can(Permission.TASKS_READ):
+        signals += automation_signals(session, ctx)
+        order = {SignalSeverity.CRITICAL: 0, SignalSeverity.WARNING: 1, SignalSeverity.INFO: 2}
+        signals.sort(key=lambda s: order[s.severity])
     ops = operations_metrics(session, ctx, as_of)
     guests = guest_metrics(session, ctx)
     recent = session.scalars(

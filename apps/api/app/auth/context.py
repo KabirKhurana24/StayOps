@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from typing import Any
 
 from app.audit.models import ActorType
 from app.auth.permissions import Permission, has_permission
@@ -37,6 +38,11 @@ class Actor:
         return cls(type=ActorType.SYSTEM, id=None, label=label)
 
     @classmethod
+    def ai(cls, run_id: uuid.UUID, label: str) -> Actor:
+        """An AI agent run. ``id`` is the run, so every action traces back to it."""
+        return cls(type=ActorType.AI_AGENT, id=run_id, label=label)
+
+    @classmethod
     def guest(cls, guest_id: uuid.UUID, label: str) -> Actor:
         return cls(type=ActorType.GUEST, id=guest_id, label=label)
 
@@ -67,6 +73,10 @@ class TenantContext:
     # write permission anywhere) and guest-facing services scope every query to
     # this stay; staff routes never accept them (they require a member JWT).
     guest_scope: GuestScope | None = None
+    # Autopilot (Phase 6): which workflow/execution/step caused this action. Merged
+    # into every audit entry written under this context, so an automated change is
+    # always traceable to its workflow (and, for approved actions, the approver).
+    attribution: dict[str, Any] | None = None
 
     @classmethod
     def system(cls, organization_id: uuid.UUID, label: str = "Automation") -> TenantContext:
@@ -87,6 +97,9 @@ class TenantContext:
             source="guest_portal",
             guest_scope=scope,
         )
+
+    def attributed(self, attribution: dict[str, Any]) -> TenantContext:
+        return replace(self, attribution=attribution, source="automation")
 
     @property
     def is_guest(self) -> bool:

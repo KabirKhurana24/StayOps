@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.automation import triggers as _automation  # noqa: F401  (registers subscriber + hook)
 from app.core.logging import get_logger
 from app.events.dispatcher import registry
 from app.events.types import EventEnvelope

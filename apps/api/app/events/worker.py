@@ -9,6 +9,7 @@ Architecture (see docs/worker.md)::
     API transaction ── state + event row (PENDING) ──► commit
                                                          │ wake (same process) / poll
     Worker ── claim batch (SKIP LOCKED, lease) ──► handlers ──► COMPLETED | FAILED+backoff
+           └─ drain hooks: Autopilot executions + scheduled triggers (app.automation)
 
 In development the API runs this loop on a background thread (``EmbeddedWorker``)
 and wakes it right after each commit, so automation feels instant without a second
@@ -31,7 +32,12 @@ from app.config.settings import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.db.session import get_session_factory
 from app.events import handlers  # noqa: F401  (registers subscribers)
-from app.events.dispatcher import AfterCommit, EventDispatcher, set_after_commit_strategy
+from app.events.dispatcher import (
+    AfterCommit,
+    EventDispatcher,
+    drain_with_hooks,
+    set_after_commit_strategy,
+)
 from app.events.models import Event, EventStatus
 
 logger = get_logger("stayops.events.worker")
@@ -49,7 +55,7 @@ def drain_once(settings: Settings | None = None) -> int:
     settings = settings or get_settings()
     dispatcher = make_dispatcher(settings)
     with get_session_factory()() as session:
-        count = dispatcher.drain(session, limit=settings.event_worker_batch_size)
+        count = drain_with_hooks(session, dispatcher, settings.event_worker_batch_size)
     if count:
         logger.info("worker.drained", count=count, worker=dispatcher.worker_id)
     return count
@@ -101,7 +107,7 @@ class EmbeddedWorker:
             self._wake.clear()
             try:
                 with get_session_factory()() as session:
-                    dispatcher.drain(session, limit=self.settings.event_worker_batch_size)
+                    drain_with_hooks(session, dispatcher, self.settings.event_worker_batch_size)
             except Exception as exc:  # database blip: log, back off, keep running
                 logger.error("worker.loop_error", error_type=type(exc).__name__, exc_info=exc)
             self._wake.wait(timeout=self.settings.event_worker_poll_seconds)

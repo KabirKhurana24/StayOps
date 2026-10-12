@@ -37,13 +37,23 @@ seed, backend + E2E tests.
 ## Phase 6 — Analytics
 - Occupancy, ADR, RevPAR, lead time, channel mix; event-sourced projections.
 
-## Phase 7 — AI guest agent & operator copilot
-- Agents act **only through domain services as an `AI_AGENT` actor** with a scoped
-  permission set; every action audited and explainable; human-in-the-loop approvals.
-- Guest agent answers from property knowledge and reservation context; copilot proposes
-  actions on Command Center signals ("reassign cleaner", "message late guest").
+## AI guest assistant & operator Copilot ✅
+- Agents act **only through typed, permission-checked tools that call domain services**,
+  as an `AI_AGENT` actor; every step persisted, evented and audited; consequential
+  actions are proposals a human approves. Provider abstraction (OpenAI, deterministic
+  mock); guardrails; evaluation suite. See [ai.md](ai.md).
+- Later: proactive Copilot suggestions on signals, assistant replies on external
+  channels once providers are connected, vector retrieval for long guides.
 
-## Phase 8 — Autopilot & integrations
-- Rule/automation engine on the event stream (triggers, conditions, actions).
+## Autopilot: workflows, approvals, AI-assisted drafting ✅
+- Versioned workflows on the event stream and a small set of scheduled triggers;
+  typed conditions with branching; allowlisted actions through domain services;
+  durable, idempotent execution in the existing worker; human approval with
+  revalidation; simulation; visual builder; templates; realtime. See
+  [automations.md](automations.md).
+- Later: waits/delays inside workflows, merging branches, more actions as modules
+  (payments, integrations) land.
+
+## Phase 8 — Integrations
 - Hostaway (and other PMS/OTA) adapter: reservation sync in, availability/rates out,
   provider ids as idempotency keys.

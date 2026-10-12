@@ -38,6 +38,7 @@ export const conversationSchema = z.object({
   status: z.enum(CONVERSATION_STATUSES),
   priority: z.enum(CONVERSATION_PRIORITIES),
   subject: z.string().nullable(),
+  assistant_enabled: z.boolean().default(true),
   guest: z.object({
     id: uuid,
     first_name: z.string(),

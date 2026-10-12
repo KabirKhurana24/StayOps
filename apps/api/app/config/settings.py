@@ -71,6 +71,29 @@ class Settings(BaseSettings):
     # A PROCESSING claim older than this is considered abandoned (worker crashed).
     event_lease_seconds: int = Field(default=300, ge=10, le=3600)
 
+    # --- AI (Phase 5) ------------------------------------------------------------
+    # disabled: no agent runs (default — nothing answers guests unless configured).
+    # mock:     deterministic in-process provider (tests, evals, demos; no network).
+    # openai:   OpenAI Chat Completions with tool calling (needs OPENAI_API_KEY).
+    ai_provider: Literal["disabled", "mock", "openai"] = "disabled"
+    openai_api_key: SecretStr | None = None
+    openai_model: str = "gpt-4.1-mini"
+    openai_base_url: str = "https://api.openai.com/v1"
+    ai_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
+    ai_max_tool_rounds: int = Field(default=4, ge=1, le=10)
+    # USD per million tokens, for cost estimates (provider prices change; set yours).
+    ai_input_cost_per_mtok: float = Field(default=0.40, ge=0)
+    ai_output_cost_per_mtok: float = Field(default=1.60, ge=0)
+
+    # --- Autopilot (Phase 6) ------------------------------------------------------
+    # Scheduled triggers are evaluated by the worker at most this often.
+    automation_schedule_interval_seconds: int = Field(default=60, ge=5, le=3600)
+    # Executions claimed per worker pass, and automatic retries of unexpected errors
+    # (business failures are not retried automatically; operators retry them).
+    automation_batch_size: int = Field(default=20, ge=1, le=200)
+    automation_max_auto_attempts: int = Field(default=3, ge=1, le=10)
+    automation_max_manual_retries: int = Field(default=5, ge=1, le=20)
+
     # Seed-only values.
     seed_demo_email: str = "demo@stayops.dev"
     seed_demo_password: SecretStr | None = None
@@ -104,6 +127,7 @@ class Settings(BaseSettings):
         "supabase_secret_key",
         "supabase_jwt_secret",
         "seed_demo_password",
+        "openai_api_key",
         mode="before",
     )
     @classmethod
@@ -119,6 +143,12 @@ class Settings(BaseSettings):
     @property
     def use_json_logs(self) -> bool:
         return self.log_json if self.log_json is not None else not self.is_development
+
+    @property
+    def ai_enabled(self) -> bool:
+        if self.ai_provider == "openai":
+            return self.openai_api_key is not None
+        return self.ai_provider == "mock"
 
     @property
     def run_embedded_worker(self) -> bool:

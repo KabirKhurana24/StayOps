@@ -9,6 +9,8 @@ export const SEVERITY_STYLE: Record<SignalSeverity, { dot: string; bar: string; 
 /** Short category shown above each signal, and the primary action label. */
 export const SIGNAL_META: Record<string, { category: string; action: string }> = {
   late_check_out: { category: "Overstay", action: "View" },
+  automation_alert: { category: "Autopilot alert", action: "View" },
+  automation_approvals: { category: "Autopilot", action: "Review" },
   late_check_in: { category: "Late arrival", action: "Open" },
   pending_arrival: { category: "Unconfirmed", action: "Review" },
   unit_unavailable: { category: "Unit conflict", action: "Resolve" },
@@ -25,13 +27,14 @@ export const SIGNAL_META: Record<string, { category: string; action: string }> =
 
 /** Where a signal's primary action leads: the most specific record it references. */
 export function signalHref(signal: OperationalSignal): string | null {
+  if (signal.code === "automation_approvals" && signal.href) return signal.href;
   if (signal.conversation_id) return `/inbox?c=${signal.conversation_id}`;
   if (signal.cleaning_id) return `/cleaning?c=${signal.cleaning_id}`;
   if (signal.task_id) return `/tasks?t=${signal.task_id}`;
   if (signal.work_order_id) return `/maintenance?wo=${signal.work_order_id}`;
   if (signal.reservation_id) return `/reservations?r=${signal.reservation_id}`;
   if (signal.property_id) return `/properties/${signal.property_id}`;
-  return null;
+  return signal.href ?? null;
 }
 
 export function signalMeta(signal: OperationalSignal) {

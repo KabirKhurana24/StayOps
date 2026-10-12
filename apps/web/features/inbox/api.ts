@@ -126,7 +126,7 @@ export function useMarkRead(conversationId: string) {
 export function useUpdateConversation(conversationId: string) {
   const refresh = useInboxRefresh();
   return useMutation({
-    mutationFn: (body: { status?: ConversationStatus; priority?: ConversationPriority; expected_version?: number }) =>
+    mutationFn: (body: { status?: ConversationStatus; priority?: ConversationPriority; assistant_enabled?: boolean; expected_version?: number }) =>
       api(`/api/v1/inbox/conversations/${conversationId}`, conversationSchema, { method: "PATCH", body }),
     onSuccess: (c) => refresh(c),
   });

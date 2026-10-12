@@ -150,6 +150,10 @@ class Conversation(UUIDPrimaryKeyMixin, TenantMixin, TimestampMixin, Base):
     )
     assigned_to: Mapped[uuid.UUID | None] = mapped_column()
     subject: Mapped[str | None] = mapped_column(String(200))
+    # The guest assistant may answer in this thread (operators can pause it).
+    assistant_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
     # Denormalised for inbox ordering; maintained by the message service.
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))

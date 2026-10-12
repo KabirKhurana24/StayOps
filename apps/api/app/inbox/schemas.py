@@ -40,6 +40,7 @@ class ConversationUpdate(BaseModel):
     status: ConversationStatus | None = None
     priority: ConversationPriority | None = None
     subject: str | None = Field(default=None, max_length=200)
+    assistant_enabled: bool | None = None
     expected_version: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="before")
@@ -105,6 +106,7 @@ class ConversationOut(BaseModel):
     status: ConversationStatus
     priority: ConversationPriority
     subject: str | None
+    assistant_enabled: bool
     guest: GuestRef
     reservation: StayRef | None
     property: PropertyRef | None

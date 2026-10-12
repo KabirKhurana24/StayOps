@@ -32,6 +32,9 @@ class OperationalSignal(BaseModel):
     work_order_id: uuid.UUID | None = None
     conversation_id: uuid.UUID | None = None
     guest_request_id: uuid.UUID | None = None
+    alert_id: uuid.UUID | None = None
+    # In-app link for signals that aren't about one reservation (Autopilot).
+    href: str | None = None
 
 
 class MoneyAmount(BaseModel):

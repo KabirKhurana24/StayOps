@@ -68,6 +68,27 @@ const INVALIDATES: Record<BroadcastTable, QueryKey[]> = {
   messages: [queryKeys.inbox.all, queryKeys.commandCenter],
   guest_requests: [queryKeys.guestRequests.all, queryKeys.inbox.all, queryKeys.commandCenter],
   property_knowledge: [queryKeys.knowledge.all],
+  // AI: each persisted step is a live progress update for the run it belongs to.
+  ai_runs: [queryKeys.ai.allRuns, queryKeys.ai.allRun],
+  ai_run_steps: [queryKeys.ai.allRuns, queryKeys.ai.allRun],
+  ai_action_proposals: [queryKeys.ai.allRuns, queryKeys.ai.allRun],
+  // Autopilot: workflow status/versions, live execution progress, approvals, alerts.
+  automation_workflows: [queryKeys.automations.workflows, queryKeys.automations.allWorkflow, queryKeys.automations.overview],
+  automation_workflow_versions: [queryKeys.automations.allWorkflow],
+  automation_executions: [
+    queryKeys.automations.executions,
+    queryKeys.automations.allExecution,
+    queryKeys.automations.overview,
+    queryKeys.automations.workflows,
+  ],
+  automation_step_executions: [queryKeys.automations.allExecution],
+  automation_approvals: [
+    queryKeys.automations.approvals,
+    queryKeys.automations.allExecution,
+    queryKeys.automations.overview,
+    queryKeys.commandCenter,
+  ],
+  operational_alerts: [queryKeys.automations.alerts, queryKeys.automations.overview, queryKeys.commandCenter],
 };
 
 const FLUSH_MS = 120; // one mutation fans out to several tables; batch the refetches

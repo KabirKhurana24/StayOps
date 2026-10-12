@@ -255,19 +255,65 @@ class EventDispatcher:
         return total
 
 
+# ---------------------------------------------------------------- drain hooks
+
+# Durable work queued *by* event handlers but run outside them — Autopilot workflow
+# executions (app.automation.runner) — is driven from the same loop as the outbox:
+# after each drain, hooks run; their own events are then drained in turn. A hook
+# returns how much work it did. ``periodic`` is True in the worker loop (time-based
+# work such as scheduled triggers may run) and False for inline dispatch.
+DrainHook = Callable[[Session, bool], int]
+_drain_hooks: list[tuple[str, DrainHook]] = []
+
+
+def register_drain_hook(name: str, hook: DrainHook) -> None:
+    if all(existing != name for existing, _ in _drain_hooks):
+        _drain_hooks.append((name, hook))
+
+
+def run_drain_hooks(session: Session, *, periodic: bool) -> int:
+    total = 0
+    for name, hook in _drain_hooks:
+        try:
+            total += hook(session, periodic)
+        except Exception as exc:  # a hook failure must never stop the outbox
+            session.rollback()
+            logger.error("worker.hook_failed", hook=name, exc_info=exc)
+    return total
+
+
+def drain_with_hooks(
+    session: Session, dispatcher: EventDispatcher, limit: int, *, max_rounds: int = 20
+) -> int:
+    """Worker unit of work: drain events, run hooks, repeat while hooks made progress."""
+    total = dispatcher.drain(session, limit=limit)
+    for _ in range(max_rounds):
+        work = run_drain_hooks(session, periodic=True)
+        total += work
+        if not work:
+            break
+        session.info.pop(PENDING_EVENTS_KEY, None)
+        total += dispatcher.drain(session, limit=limit)
+    return total
+
+
 # ------------------------------------------------------------- after commit
 
 AfterCommit = Callable[[Session, list[uuid.UUID]], None]
 
 
 def _inline(session: Session, event_ids: list[uuid.UUID]) -> None:
-    """Process now, including events emitted by the handlers themselves (cascade)."""
+    """Process now, including events emitted by the handlers themselves (cascade),
+    and the durable work those handlers queued (drain hooks)."""
     dispatcher = EventDispatcher()
     queue = list(event_ids)
     for _ in range(100):  # bounded: handlers must not emit events forever
-        if not queue:
+        if queue:
+            dispatcher.dispatch(session, queue)
+            queue = session.info.pop(PENDING_EVENTS_KEY, [])
+            continue
+        if not run_drain_hooks(session, periodic=False):
             return
-        dispatcher.dispatch(session, queue)
         queue = session.info.pop(PENDING_EVENTS_KEY, [])
 
 

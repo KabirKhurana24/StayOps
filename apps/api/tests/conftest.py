@@ -22,6 +22,10 @@ from __future__ import annotations
 
 import json
 import os
+
+# Tests never use a configured LLM provider: AI tests inject the MockProvider
+# explicitly (tests/ai_helpers.py). Set before app settings are first read.
+os.environ["AI_PROVIDER"] = "disabled"
 import time
 import uuid
 from collections.abc import Iterator
@@ -44,16 +48,22 @@ from app.main import create_app
 from app.organizations.models import Organization, OrganizationMember, Profile, Role
 
 # Phase 4 fixtures (guest_stay, …) live with their builders.
-pytest_plugins = ["tests.inbox_helpers"]
+pytest_plugins = ["tests.inbox_helpers", "tests.ai_helpers"]
 
 TEST_JWT_SECRET = "test-only-secret-not-used-anywhere-else-0123456789"
 TEST_SUPABASE_URL = "https://stayops-test.supabase.co"
 REQUIRE_SUPABASE = os.environ.get("STAYOPS_REQUIRE_SUPABASE", "").lower() in ("1", "true", "yes")
 
 
+LIVE_LLM = os.environ.get("STAYOPS_LIVE_LLM", "").lower() in ("1", "true", "yes")
+
+
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Tag every test with its tier so ``-m unit|db|supabase`` selects precisely."""
     for item in items:
+        if item.get_closest_marker("llm_live") and not LIVE_LLM:
+            # Paid provider calls are opt-in only, never part of a normal run.
+            item.add_marker(pytest.mark.skip(reason="real LLM smoke test; set STAYOPS_LIVE_LLM=1"))
         if item.get_closest_marker("supabase"):
             continue
         uses_db = "db_engine" in getattr(item, "fixturenames", ())

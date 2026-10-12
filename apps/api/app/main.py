@@ -9,8 +9,12 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.ai.router import router as ai_router
+from app.ai.service import use_background_execution
+from app.alerts.router import router as alerts_router
 from app.audit.router import router as audit_router
 from app.auth.router import router as auth_router
+from app.automation.router import router as automation_router
 from app.calendar.router import router as calendar_router
 from app.cleaning.router import router as cleaning_router
 from app.command_center.router import router as command_center_router
@@ -67,6 +71,9 @@ class SecurityHeadersMiddleware:
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level, settings.use_json_logs)
+    # AI runs execute after the request returns (live progress over realtime);
+    # tests run them inline inside the test transaction.
+    use_background_execution(settings.app_env != "test")
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -135,6 +142,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         knowledge_router,
         portal_links_router,
         guest_portal_router,
+        ai_router,
+        automation_router,
+        alerts_router,
     ):
         v1.include_router(router)
     app.include_router(v1)

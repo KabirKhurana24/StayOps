@@ -52,7 +52,11 @@ def record_audit(
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,
-        metadata_=sanitize_metadata(metadata or {}),
+        metadata_=sanitize_metadata(
+            {**(metadata or {}), "automation": ctx.attribution}
+            if ctx.attribution
+            else (metadata or {})
+        ),
         # Wall-clock time of the action (not transaction start), so several entries
         # written by one unit of work keep their real order.
         occurred_at=utc_now(),

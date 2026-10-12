@@ -54,3 +54,13 @@ Worker ── claim batch (UPDATE … FOR UPDATE SKIP LOCKED, lease) ──► P
 Unit availability never waits for the worker: an active work order with
 `blocks_unit` *is* the block, and the reservations availability service reads it
 synchronously. `unit.blocked` / `unit.unblocked` are a record of what happened.
+
+## Autopilot (drain hooks)
+
+After each drain the worker runs registered *drain hooks*
+(`app.events.dispatcher.register_drain_hook`). Autopilot registers one that evaluates
+scheduled triggers (worker loop only, rate-limited) and runs PENDING workflow
+executions (`SKIP LOCKED` claim + lease, one commit per step); events those steps emit
+are drained in the next round. Inline dispatch (scripts, tests) runs the hook too, so
+tests see the same cascade as production. See [automations.md](automations.md).
+

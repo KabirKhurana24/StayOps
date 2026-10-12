@@ -19,6 +19,9 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: WEB_URL,
+    // Long tests raise the test timeout for slow remote round trips; an action whose
+    // target never appears (e.g. hidden behind a modal) must still fail fast.
+    actionTimeout: 120_000,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -27,6 +30,8 @@ export default defineConfig({
     {
       command: "uv run uvicorn app.main:app --port 8000",
       cwd: path.resolve(__dirname, "../api"),
+      // E2E runs the AI on the deterministic MockProvider: no paid LLM calls.
+      env: { ...process.env, AI_PROVIDER: process.env.E2E_AI_PROVIDER ?? "mock" } as Record<string, string>,
       url: `${API_URL}/health`,
       reuseExistingServer: true,
       timeout: 120_000,

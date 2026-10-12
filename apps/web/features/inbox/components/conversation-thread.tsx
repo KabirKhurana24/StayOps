@@ -10,7 +10,7 @@ import {
   type GuestRequestType,
   type Message,
 } from "@stayops/shared";
-import { ArrowLeft, ClipboardList, Info, Lock, MessageSquare, PanelRight, Send, UserPlus } from "lucide-react";
+import { ArrowLeft, Bot, ClipboardList, Info, Lock, MessageSquare, PanelRight, Send, UserPlus } from "lucide-react";
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Select, Textarea } from "@/components/ui/form";
 import { Avatar } from "@/components/ui/misc";
 import { Segmented } from "@/components/ui/segmented";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/states";
+import { useAIStatus } from "@/features/ai/api";
 import { AssigneeMenu } from "@/features/operations/components/assignee-menu";
 import { ApiError, newIdempotencyKey } from "@/lib/api/client";
 import { formatClock, formatStayRange } from "@/lib/format";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 
 import { useAssignConversation, useChannels, useMarkRead, useMessages, useSendMessage, useUpdateConversation } from "../api";
 import { groupByDay, messageSide } from "../model";
+import { AssistantActivity } from "./assistant-activity";
 
 const STATUS_LABEL: Record<ConversationStatus, string> = { OPEN: "Open", PENDING: "Waiting on guest", RESOLVED: "Resolved", CLOSED: "Closed" };
 const PRIORITY_LABEL: Record<ConversationPriority, string> = { LOW: "Low", NORMAL: "Normal", HIGH: "High", URGENT: "Urgent" };
@@ -56,7 +58,7 @@ function MessageBubble({ m, guestName }: { m: Message; guestName: string }) {
   }
 
   const fromGuest = side === "left";
-  const who = fromGuest ? guestName : m.sender_type === "AI" ? "Assistant" : (m.sender_label ?? "Team");
+  const who = fromGuest ? guestName : m.sender_type === "AI" ? "Assistant · AI" : (m.sender_label ?? "Team");
   return (
     <li
       className={cn("flex gap-2 px-4", fromGuest ? "justify-start" : "justify-end")}
@@ -77,7 +79,9 @@ function MessageBubble({ m, guestName }: { m: Message; guestName: string }) {
               ? "rounded-tr-sm border border-dashed border-warning/40 bg-warning/8 text-foreground"
               : fromGuest
                 ? "rounded-tl-sm border bg-surface text-foreground shadow-xs"
-                : "rounded-tr-sm bg-primary text-primary-foreground",
+                : m.sender_type === "AI"
+                  ? "rounded-tr-sm border border-accent/25 bg-accent-soft text-foreground"
+                  : "rounded-tr-sm bg-primary text-primary-foreground",
           )}
         >
           {m.message_type === "REQUEST" && requestType ? (
@@ -198,6 +202,7 @@ export function ConversationThread({
   const messages = useMessages(conversation.id);
   const markRead = useMarkRead(conversation.id);
   const update = useUpdateConversation(conversation.id);
+  const aiEnabled = useAIStatus().data?.enabled ?? false;
   const assign = useAssignConversation(conversation.id);
   const scrollRef = useRef<HTMLDivElement>(null);
   const guestName = `${conversation.guest.first_name} ${conversation.guest.last_name}`;
@@ -298,6 +303,18 @@ export function ConversationThread({
           ) : conversation.assignee ? (
             <span className="text-xs text-muted-foreground">Assigned to {conversation.assignee.name}</span>
           ) : null}
+          {aiEnabled ? (
+            <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground" title="Let the guest assistant answer in this thread">
+              <input
+                type="checkbox"
+                checked={conversation.assistant_enabled}
+                disabled={!canWrite || update.isPending}
+                onChange={(e) => update.mutate({ assistant_enabled: e.target.checked })}
+                aria-label="Guest assistant"
+              />
+              <Bot className="size-3.5" /> Assistant {conversation.assistant_enabled ? "on" : "paused"}
+            </label>
+          ) : null}
         </div>
       </header>
 
@@ -327,6 +344,7 @@ export function ConversationThread({
         )}
       </div>
 
+      <AssistantActivity conversationId={conversation.id} />
       <Composer conversation={conversation} canWrite={canWrite} />
     </section>
   );

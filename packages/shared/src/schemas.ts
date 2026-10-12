@@ -262,6 +262,9 @@ export const signalSchema = z.object({
   work_order_id: uuid.nullable().optional(),
   conversation_id: uuid.nullable().optional(),
   guest_request_id: uuid.nullable().optional(),
+  alert_id: uuid.nullable().optional(),
+  // In-app link for signals that aren't about one reservation (Autopilot).
+  href: z.string().nullable().optional(),
 });
 export type OperationalSignal = z.infer<typeof signalSchema>;
 

@@ -48,6 +48,9 @@ Each module owns `models.py`, `schemas.py` (DTOs — ORM models are never return
 - `knowledge` — structured property knowledge (the guest guide; AI grounding source)
 - `guest_portal` — hashed per-stay access links and guest-facing read models
 - `channels` — `ChannelAdapter` boundary (in-app connected; providers not configured)
+- `ai` — providers, orchestrator, tools, guardrails, runs/steps/proposals (Phase 5, see [ai.md](ai.md))
+- `automation`, `alerts` — Autopilot workflows, versions, executions, approvals, scheduled
+  triggers and operational alerts (Phase 6, see [automations.md](automations.md))
 - `reservations` — booking lifecycle, state machine, availability
 - `command_center` — read model: today per property timezone, metrics, signals
 - `events` — `DomainEvent`, idempotent `publish`, `EventDispatcher`, subscriber registry, worker

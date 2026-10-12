@@ -433,10 +433,10 @@ def _team_note(
 
 
 def _source_for(ctx: TenantContext) -> GuestRequestSource:
-    if ctx.is_guest:
-        return GuestRequestSource.GUEST
     if ctx.actor.type.value == "AI_AGENT":
         return GuestRequestSource.AI
+    if ctx.is_guest:
+        return GuestRequestSource.GUEST
     if ctx.actor.type.value == "USER":
         return GuestRequestSource.STAFF
     return GuestRequestSource.SYSTEM

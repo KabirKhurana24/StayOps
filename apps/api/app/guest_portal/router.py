@@ -13,6 +13,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, status
 
+from app.ai import service as ai
+from app.ai.schemas import GuestAssistantOut
 from app.auth.context import TenantContext
 from app.auth.dependencies import DbSession, require
 from app.auth.permissions import Permission
@@ -31,6 +33,7 @@ from app.guest_portal.schemas import (
     PortalLinkIssued,
     PortalLinkStatus,
 )
+from app.inbox.models import Message
 
 guest_router = APIRouter(prefix="/guest", tags=["guest portal"])
 links_router = APIRouter(prefix="/reservations", tags=["guest portal"])
@@ -74,7 +77,19 @@ def send_message(
         lambda: service.send_guest_message(db, gs, body.content, idempotency_key),
         lambda mid: mid,
     )
-    return service.get_message(db, gs, message_id)
+    out = service.get_message(db, gs, message_id)
+    # The assistant (when enabled) answers after the message is safely stored.
+    run_id = ai.start_guest_run(db, gs.ctx, db.get_one(Message, message_id))
+    if run_id is not None:
+        ai.submit(db, run_id)
+    return out
+
+
+@guest_router.get(
+    "/assistant", response_model=GuestAssistantOut, summary="Assistant status and live progress"
+)
+def assistant(db: DbSession, gs: Guest) -> GuestAssistantOut:
+    return service.assistant_state(db, gs)
 
 
 @guest_router.post("/messages/read", status_code=status.HTTP_204_NO_CONTENT)

@@ -59,6 +59,32 @@ class EventType(StrEnum):
     KNOWLEDGE_ARCHIVED = "knowledge.archived"
     GUEST_PORTAL_LINK_CREATED = "guest_portal.link_created"
     GUEST_PORTAL_LINK_REVOKED = "guest_portal.link_revoked"
+    AGENT_STARTED = "agent.started"
+    AGENT_TOOL_CALLED = "agent.tool_called"
+    AGENT_TOOL_COMPLETED = "agent.tool_completed"
+    AGENT_COMPLETED = "agent.completed"
+    AGENT_FAILED = "agent.failed"
+    AGENT_ESCALATED = "agent.escalated"
+    AI_ACTION_PROPOSED = "ai_action.proposed"
+    AI_ACTION_APPROVED = "ai_action.approved"
+    AI_ACTION_REJECTED = "ai_action.rejected"
+    # Autopilot (Phase 6). Workflow lifecycle, notable execution outcomes and
+    # approvals; step-by-step progress lives in the execution tables (realtime).
+    AUTOMATION_CREATED = "automation.created"
+    AUTOMATION_UPDATED = "automation.updated"
+    AUTOMATION_PUBLISHED = "automation.published"
+    AUTOMATION_PAUSED = "automation.paused"
+    AUTOMATION_RESUMED = "automation.resumed"
+    AUTOMATION_ARCHIVED = "automation.archived"
+    AUTOMATION_EXECUTION_COMPLETED = "automation_execution.completed"
+    AUTOMATION_EXECUTION_FAILED = "automation_execution.failed"
+    AUTOMATION_EXECUTION_RETRIED = "automation_execution.retried"
+    AUTOMATION_APPROVAL_REQUESTED = "automation_approval.requested"
+    AUTOMATION_APPROVAL_APPROVED = "automation_approval.approved"
+    AUTOMATION_APPROVAL_REJECTED = "automation_approval.rejected"
+    ALERT_CREATED = "alert.created"
+    ALERT_ACKNOWLEDGED = "alert.acknowledged"
+    ALERT_RESOLVED = "alert.resolved"
 
 
 class AggregateType(StrEnum):
@@ -75,6 +101,12 @@ class AggregateType(StrEnum):
     GUEST_REQUEST = "guest_request"
     KNOWLEDGE = "knowledge"
     GUEST_PORTAL_LINK = "guest_portal_link"
+    AI_RUN = "ai_run"
+    AI_ACTION = "ai_action"
+    AUTOMATION = "automation"
+    AUTOMATION_EXECUTION = "automation_execution"
+    AUTOMATION_APPROVAL = "automation_approval"
+    ALERT = "alert"
 
 
 @dataclass(frozen=True, slots=True)

@@ -10,13 +10,15 @@ import { ApiError, newIdempotencyKey } from "@/lib/api/client";
 import { formatClock } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-import { useGuestMessages, useGuestStay, useMarkGuestRead, useSendGuestMessage } from "./api";
+import { useGuestAssistant, useGuestMessages, useGuestStay, useMarkGuestRead, useSendGuestMessage } from "./api";
 
 export function GuestMessages() {
   const messages = useGuestMessages();
   const stay = useGuestStay();
   const send = useSendGuestMessage();
   const markRead = useMarkGuestRead();
+  const assistant = useGuestAssistant();
+  const working = assistant.data?.running ? assistant.data.steps.findLast((s) => s.status === "STARTED") : undefined;
   const [text, setText] = useState("");
   const keyRef = useRef(newIdempotencyKey("guest"));
   const endRef = useRef<HTMLDivElement>(null);
@@ -54,7 +56,10 @@ export function GuestMessages() {
   return (
     <div className="flex min-h-[calc(100dvh-11rem)] flex-col" data-testid="guest-messages">
       <h1 className="mb-1 text-xl font-semibold">Messages</h1>
-      <p className="mb-4 text-xs text-muted-foreground">Chat with {stay.data?.host_name ?? "your host"} about anything during your stay.</p>
+      <p className="mb-4 text-xs text-muted-foreground">
+        Chat with {stay.data?.host_name ?? "your host"} about anything during your stay.
+        {assistant.data?.enabled ? " Simple questions are answered instantly by their AI assistant; the team sees everything and takes over when needed." : ""}
+      </p>
       <div className="flex-1 space-y-3" aria-live="polite">
         {messages.isPending ? (
           <Skeleton className="h-16 w-3/4" />
@@ -71,7 +76,9 @@ export function GuestMessages() {
             return (
               <div key={m.id} className={cn("flex flex-col", mine ? "items-end" : "items-start")} data-testid="guest-message" data-sender={m.sender}>
                 <span className="mb-0.5 px-1 text-[11px] text-muted-foreground">
-                  {mine ? "You" : m.sender_label} · {formatClock(m.created_at)}
+                  {mine ? "You" : m.sender_label}
+                  {m.sender === "assistant" ? <span className="ml-1 rounded bg-accent-soft px-1 text-[10px] font-medium text-accent">AI</span> : null} ·{" "}
+                  {formatClock(m.created_at)}
                 </span>
                 <p
                   className={cn(
@@ -87,6 +94,12 @@ export function GuestMessages() {
         ) : (
           <p className="py-8 text-center text-sm text-muted-foreground">No messages yet — say hello!</p>
         )}
+        {assistant.data?.running ? (
+          <p className="flex items-center gap-2 px-1 text-xs text-muted-foreground" data-testid="guest-assistant-working" aria-live="polite">
+            <span className="size-1.5 animate-pulse rounded-full bg-accent" />
+            {working?.label ?? "The assistant is looking into it"}…
+          </p>
+        ) : null}
         <div ref={endRef} />
       </div>
       <form onSubmit={submit} className="sticky bottom-20 mt-4 flex items-end gap-2 rounded-2xl border bg-surface p-2 shadow-sm">

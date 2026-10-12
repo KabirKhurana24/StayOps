@@ -17,6 +17,15 @@ export const BROADCAST_TABLES = [
   "messages",
   "guest_requests",
   "property_knowledge",
+  "ai_runs",
+  "ai_run_steps",
+  "ai_action_proposals",
+  "automation_workflows",
+  "automation_workflow_versions",
+  "automation_executions",
+  "automation_step_executions",
+  "automation_approvals",
+  "operational_alerts",
 ] as const;
 export type BroadcastTable = (typeof BROADCAST_TABLES)[number];
 
@@ -36,6 +45,9 @@ export const broadcastPayloadSchema = z.object({
   entity_id: z.string().optional(),
   aggregate_id: z.string().optional(),
   conversation_id: z.string().optional(),
+  run_id: z.string().optional(),
+  workflow_id: z.string().optional(),
+  execution_id: z.string().optional(),
   at: z.string().optional(),
 });
 export type BroadcastPayload = z.infer<typeof broadcastPayloadSchema>;

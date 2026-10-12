@@ -16,6 +16,7 @@ import { ReservationFormSheet } from "@/features/reservations/components/reserva
 import { firstName, greeting } from "@/lib/format";
 
 import { CommandCenterMetrics } from "./components/metrics";
+import { CopilotCard } from "./components/copilot-card";
 import { GuestPulse } from "./components/guest-pulse";
 import { NeedsAttention } from "./components/needs-attention";
 import { OperationalOverview } from "./components/operational-overview";
@@ -92,6 +93,7 @@ export function CommandCenterView() {
             </div>
             <div className="min-w-0 space-y-5 xl:sticky xl:top-[68px] xl:col-start-2 xl:row-span-3 xl:row-start-1">
               <NeedsAttention signals={data.signals} />
+              {can(org.data, "copilot:use") ? <CopilotCard /> : null}
               {can(org.data, "inbox:read") ? <GuestPulse metrics={data.metrics} /> : null}
             </div>
             <Panel

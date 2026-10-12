@@ -165,6 +165,19 @@ cluster (`pnpm test:db:start`) and why the remote-only suite took ~2.5 h.
 Playwright needs the API, web app and seed data; it starts the servers itself if they
 are not running (`reuseExistingServer`).
 
+## Guest experience and AI
+
+- **Unified inbox** (`/inbox`), **guest requests** that convert into tasks or work
+  orders, structured **property knowledge**, and a tokenized **guest portal**
+  (`/guest#token=…`) — see [docs/guest-experience.md](docs/guest-experience.md).
+- **Guest assistant** and **operator Copilot** (`/copilot`) acting only through
+  explicit tools with human approval for changes — see [docs/ai.md](docs/ai.md).
+- **Autopilot** (`/automations`): versioned, simulated, audited workflows on real
+  events and schedules, with a visual builder, templates, approvals and AI-assisted
+  drafting — see [docs/automations.md](docs/automations.md).
+  Off by default: set `AI_PROVIDER=mock` (deterministic demo) or `openai` +
+  `OPENAI_API_KEY`.
+
 ## Realtime architecture (summary)
 
 1. API commits a change (e.g. reservation updated).

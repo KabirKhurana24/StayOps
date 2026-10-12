@@ -39,6 +39,12 @@ class Permission(StrEnum):
     INBOX_WRITE = "inbox:write"
     GUEST_REQUESTS_MANAGE = "guest_requests:manage"
     KNOWLEDGE_WRITE = "knowledge:write"
+    COPILOT_USE = "copilot:use"
+    # Autopilot (Phase 6): read workflows/executions; author, publish, pause, retry;
+    # decide actions a workflow paused for.
+    AUTOMATIONS_READ = "automations:read"
+    AUTOMATIONS_MANAGE = "automations:manage"
+    AUTOMATIONS_APPROVE = "automations:approve"
 
 
 _READ = {
@@ -52,7 +58,7 @@ _READ = {
 }
 # Guest communications are front-of-house: viewers may read the inbox, staff (who
 # work assigned tasks) don't see guest conversations at all.
-_VIEW = _READ | {Permission.INBOX_READ}
+_VIEW = _READ | {Permission.INBOX_READ, Permission.COPILOT_USE, Permission.AUTOMATIONS_READ}
 # Staff see the operation (properties, calendar) but only act on their own work;
 # task/work-order visibility is narrowed to "mine" in the services.
 _STAFF = _READ | {Permission.TASKS_WORK, Permission.MAINTENANCE_WORK}
@@ -66,6 +72,10 @@ _OPERATE = _STAFF | {
     Permission.INBOX_WRITE,
     Permission.GUEST_REQUESTS_MANAGE,
     Permission.KNOWLEDGE_WRITE,
+    Permission.COPILOT_USE,
+    Permission.AUTOMATIONS_READ,
+    Permission.AUTOMATIONS_MANAGE,
+    Permission.AUTOMATIONS_APPROVE,
 }
 _ADMIN = _OPERATE | {Permission.PROPERTIES_WRITE, Permission.ORG_MANAGE}
 

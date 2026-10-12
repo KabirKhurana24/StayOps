@@ -90,6 +90,15 @@ export const EVENT_TYPES = [
   "knowledge.archived",
   "guest_portal.link_created",
   "guest_portal.link_revoked",
+  "agent.started",
+  "agent.tool_called",
+  "agent.tool_completed",
+  "agent.completed",
+  "agent.failed",
+  "agent.escalated",
+  "ai_action.proposed",
+  "ai_action.approved",
+  "ai_action.rejected",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
@@ -114,6 +123,10 @@ export const PERMISSIONS = [
   "inbox:write",
   "guest_requests:manage",
   "knowledge:write",
+  "copilot:use",
+  "automations:read",
+  "automations:manage",
+  "automations:approve",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -250,3 +263,20 @@ export type KnowledgeVisibility = (typeof KNOWLEDGE_VISIBILITIES)[number];
 
 export const STAY_PHASES = ["UPCOMING", "ARRIVING_TODAY", "IN_HOUSE", "DEPARTING_TODAY", "DEPARTED"] as const;
 export type StayPhase = (typeof STAY_PHASES)[number];
+
+// ------------------------------------------------------------- AI (Phase 5)
+
+export const AGENT_TYPES = ["GUEST_AGENT", "OPERATOR_COPILOT"] as const;
+export type AgentType = (typeof AGENT_TYPES)[number];
+
+export const RUN_STATUSES = ["RUNNING", "COMPLETED", "AWAITING_APPROVAL", "ESCALATED", "FAILED"] as const;
+export type RunStatus = (typeof RUN_STATUSES)[number];
+
+export const STEP_KINDS = ["CONTEXT", "LLM", "TOOL", "PROPOSAL", "GUARDRAIL", "ANSWER"] as const;
+export type StepKind = (typeof STEP_KINDS)[number];
+
+export const STEP_STATUSES = ["STARTED", "COMPLETED", "FAILED", "BLOCKED"] as const;
+export type StepStatus = (typeof STEP_STATUSES)[number];
+
+export const PROPOSAL_STATUSES = ["PENDING", "APPROVED", "EXECUTED", "REJECTED", "FAILED"] as const;
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];

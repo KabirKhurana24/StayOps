@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  guestAssistantSchema,
   type GuestRequestType,
   guestKnowledgeSchema,
   guestMessageSchema,
@@ -22,7 +23,17 @@ const keys = {
   knowledge: ["guest", "knowledge"] as const,
   messages: ["guest", "messages"] as const,
   requests: ["guest", "requests"] as const,
+  assistant: ["guest", "assistant"] as const,
 };
+
+/** Assistant on/off and the latest run's live progress (polled fast only while it works). */
+export function useGuestAssistant() {
+  return useQuery({
+    queryKey: keys.assistant,
+    queryFn: ({ signal }) => guestApi("/assistant", guestAssistantSchema, { signal }),
+    refetchInterval: (q) => (q.state.data?.running ? 1_200 : 15_000),
+  });
+}
 
 export function useGuestStay() {
   return useQuery({ queryKey: keys.stay, queryFn: ({ signal }) => guestApi("/stay", guestStaySchema, { signal }), refetchInterval: 30_000 });
@@ -49,6 +60,7 @@ export function useSendGuestMessage() {
       qc.setQueryData<z.infer<typeof guestMessageSchema>[]>(keys.messages, (prev) => (prev && !prev.some((x) => x.id === m.id) ? [...prev, m] : prev));
       void qc.invalidateQueries({ queryKey: keys.messages });
       void qc.invalidateQueries({ queryKey: keys.stay });
+      void qc.invalidateQueries({ queryKey: keys.assistant });
     },
   });
 }
